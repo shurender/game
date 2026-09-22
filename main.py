@@ -1,9 +1,17 @@
-import pygame
-import os
+"""Risu — A Creature Collecting Adventure.
+
+Launch the game by running this file:
+
+    python main.py
+"""
+from game.core.game import Game
 
 
-pygame.init()
+def main() -> None:
+    """Create and run the game."""
+    game = Game()
+    game.run()
 
-window = pygame.display.set_mode((500,500))
-while True:
-    pass
+
+if __name__ == "__main__":
+    main()

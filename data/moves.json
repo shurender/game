@@ -1,0 +1,76 @@
+{
+  "moves": {
+    "M1": {
+      "name": "Tackle",
+      "type": "Normal",
+      "category": "Physical",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 35,
+      "description": "A physical charge attack."
+    },
+    "M2": {
+      "name": "Ember Spark",
+      "type": "Ember",
+      "category": "Special",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 25,
+      "description": "A small spark of fire is thrown at the target."
+    },
+    "M3": {
+      "name": "Water Splash",
+      "type": "Tide",
+      "category": "Special",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 25,
+      "description": "A small blast of water."
+    },
+    "M4": {
+      "name": "Wind Gust",
+      "type": "Gale",
+      "category": "Special",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 35,
+      "description": "A sharp gust of wind."
+    },
+    "M5": {
+      "name": "Rock Throw",
+      "type": "Terra",
+      "category": "Physical",
+      "power": 50,
+      "accuracy": 90,
+      "pp": 15,
+      "description": "Hurls a small rock at the target."
+    },
+    "M6": {
+      "name": "Static Zap",
+      "type": "Volt",
+      "category": "Special",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 30,
+      "description": "A minor jolt of electricity."
+    },
+    "M7": {
+      "name": "Flame Burst",
+      "type": "Ember",
+      "category": "Special",
+      "power": 90,
+      "accuracy": 100,
+      "pp": 15,
+      "description": "A massive burst of fiery energy."
+    },
+    "M8": {
+      "name": "Healing Breeze",
+      "type": "Gale",
+      "category": "Status",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "description": "Restores the user's HP."
+    }
+  }
+}
