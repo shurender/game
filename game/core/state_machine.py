@@ -72,6 +72,6 @@ class StateMachine:
             self.current.update(dt)
 
     def render(self, surface: pygame.Surface) -> None:
-        """Draw the current state."""
-        if self.current:
-            self.current.render(surface)
+        """Draw all states from bottom to top."""
+        for state in self._stack:
+            state.render(surface)

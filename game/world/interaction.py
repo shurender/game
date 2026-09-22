@@ -20,7 +20,9 @@ class InteractionManager:
             logger.info(f"Interacted with Trainer {target.name}. Dialogue ID: {target.dialogue_id}")
             if not target.has_battled:
                 logger.info(f"Starting battle with Trainer {target.name}...")
-                # self.game.state_machine.push(BattleState(self.game, target.trainer_data))
+                from game.states.dialogue_state import DialogueState
+                self.game.state_machine.push(DialogueState(self.game, target.dialogue_id))
         elif isinstance(target, NPC):
             logger.info(f"Interacted with NPC {target.name}. Dialogue ID: {target.dialogue_id}")
-            # self.game.state_machine.push(DialogueState(self.game, target.dialogue_id))
+            from game.states.dialogue_state import DialogueState
+            self.game.state_machine.push(DialogueState(self.game, target.dialogue_id))
