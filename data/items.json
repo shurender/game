@@ -1,0 +1,68 @@
+{
+  "items": {
+    "I1": {
+      "name": "Health Vial",
+      "category": "Healing",
+      "effect": "heal_hp",
+      "value": 20,
+      "price": 100,
+      "description": "Heals a creature by 20 HP."
+    },
+    "I2": {
+      "name": "Major Health Vial",
+      "category": "Healing",
+      "effect": "heal_hp",
+      "value": 50,
+      "price": 300,
+      "description": "Heals a creature by 50 HP."
+    },
+    "I3": {
+      "name": "Capture Sphere",
+      "category": "Capture",
+      "effect": "capture",
+      "value": 1.0,
+      "price": 200,
+      "description": "A basic sphere used to capture wild creatures."
+    },
+    "I4": {
+      "name": "Great Sphere",
+      "category": "Capture",
+      "effect": "capture",
+      "value": 1.5,
+      "price": 600,
+      "description": "A superior sphere with a higher capture rate."
+    },
+    "I5": {
+      "name": "Antidote Balm",
+      "category": "Healing",
+      "effect": "cure_status",
+      "value": "Poison",
+      "price": 150,
+      "description": "Cures the Poison status effect."
+    },
+    "I6": {
+      "name": "Burn Salve",
+      "category": "Healing",
+      "effect": "cure_status",
+      "value": "Burn",
+      "price": 150,
+      "description": "Cures the Burn status effect."
+    },
+    "I7": {
+      "name": "Energy Drink",
+      "category": "Stat Boost",
+      "effect": "boost_spd",
+      "value": 1,
+      "price": 500,
+      "description": "Boosts Speed during battle."
+    },
+    "I8": {
+      "name": "Old Map",
+      "category": "Key Item",
+      "effect": "none",
+      "value": 0,
+      "price": 0,
+      "description": "An ancient map of Ethervale."
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "creatures": {
+    "C1": {
+      "name": "Ignipup",
+      "type": ["Ember"],
+      "description": "A small, energetic dog-like creature with a perpetually warm tail.",
+      "base_stats": {
+        "hp": 45,
+        "atk": 60,
+        "def": 40,
+        "sp_atk": 50,
+        "sp_def": 40,
+        "spd": 65
+      },
+      "evolution": {"level": 16, "target": "C2"}
+    },
+    "C2": {
+      "name": "Blazehound",
+      "type": ["Ember"],
+      "description": "A fierce canine shrouded in flames. It runs faster than the wind.",
+      "base_stats": {
+        "hp": 65,
+        "atk": 85,
+        "def": 60,
+        "sp_atk": 70,
+        "sp_def": 60,
+        "spd": 90
+      },
+      "evolution": null
+    },
+    "C3": {
+      "name": "Aquabip",
+      "type": ["Tide"],
+      "description": "An amphibious creature that carries a bubble of water on its head.",
+      "base_stats": {
+        "hp": 55,
+        "atk": 45,
+        "def": 55,
+        "sp_atk": 65,
+        "sp_def": 55,
+        "spd": 40
+      },
+      "evolution": {"level": 16, "target": "C4"}
+    },
+    "C4": {
+      "name": "Tidalisk",
+      "type": ["Tide", "Normal"],
+      "description": "A sleek, serpentine creature that commands ocean currents.",
+      "base_stats": {
+        "hp": 80,
+        "atk": 65,
+        "def": 75,
+        "sp_atk": 90,
+        "sp_def": 80,
+        "spd": 60
+      },
+      "evolution": null
+    },
+    "C5": {
+      "name": "Zephlet",
+      "type": ["Gale"],
+      "description": "A fluffy, floating creature made almost entirely of compressed air.",
+      "base_stats": {
+        "hp": 40,
+        "atk": 35,
+        "def": 30,
+        "sp_atk": 60,
+        "sp_def": 45,
+        "spd": 85
+      },
+      "evolution": null
+    }
+  }
+}

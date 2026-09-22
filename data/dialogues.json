@@ -1,0 +1,42 @@
+{
+  "dialogues": {
+    "mom_intro": {
+      "nodes": {
+        "start": {
+          "speaker": "Mom",
+          "text": "Good morning! Are you ready for your adventure?",
+          "next": "ask_ready"
+        },
+        "ask_ready": {
+          "speaker": "Mom",
+          "text": "Do you have everything you need?",
+          "choices": [
+            {"text": "Yes!", "next": "end_yes"},
+            {"text": "Not yet.", "next": "end_no"}
+          ]
+        },
+        "end_yes": {
+          "speaker": "Mom",
+          "text": "Great! Good luck out there!"
+        },
+        "end_no": {
+          "speaker": "Mom",
+          "text": "Well, take your time and be careful."
+        }
+      }
+    },
+    "rival_challenge": {
+      "nodes": {
+        "start": {
+          "speaker": "Rival",
+          "text": "Hey! I've been waiting for you!",
+          "next": "challenge"
+        },
+        "challenge": {
+          "speaker": "Rival",
+          "text": "Let's see who's stronger in a battle!"
+        }
+      }
+    }
+  }
+}

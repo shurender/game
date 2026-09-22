@@ -1,0 +1,43 @@
+{
+  "types": [
+    "Normal",
+    "Ember",
+    "Tide",
+    "Gale",
+    "Terra",
+    "Volt"
+  ],
+  "matchups": {
+    "Normal": {},
+    "Ember": {
+      "Tide": 0.5,
+      "Gale": 2.0,
+      "Terra": 0.5,
+      "Volt": 1.0
+    },
+    "Tide": {
+      "Ember": 2.0,
+      "Gale": 1.0,
+      "Terra": 2.0,
+      "Volt": 0.5
+    },
+    "Gale": {
+      "Ember": 0.5,
+      "Tide": 1.0,
+      "Terra": 0.5,
+      "Volt": 2.0
+    },
+    "Terra": {
+      "Ember": 2.0,
+      "Tide": 0.5,
+      "Gale": 2.0,
+      "Volt": 2.0
+    },
+    "Volt": {
+      "Ember": 1.0,
+      "Tide": 2.0,
+      "Gale": 0.5,
+      "Terra": 0.0
+    }
+  }
+}
