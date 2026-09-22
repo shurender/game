@@ -30,3 +30,13 @@ class TypeSystem:
                 multiplier *= attack_matchups[def_type]
                 
         return multiplier
+        
+    def get_effectiveness_message(self, multiplier: float) -> str:
+        """Return a string descriptor for the damage multiplier."""
+        if multiplier == 0.0:
+            return "It has no effect..."
+        elif multiplier > 1.0:
+            return "It's super effective!"
+        elif multiplier < 1.0:
+            return "It's not very effective..."
+        return ""

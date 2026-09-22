@@ -73,5 +73,5 @@ class StateMachine:
 
     def render(self, surface: pygame.Surface) -> None:
         """Draw all states from bottom to top."""
-        for state in self._stack:
+        for state in self._states:
             state.render(surface)
