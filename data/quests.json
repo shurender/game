@@ -1,3 +1,63 @@
 {
-  "quests": {}
+  "quests": {
+    "main_01": {
+      "name": "The Journey Begins",
+      "type": "main",
+      "description": "Speak with Mom before you head out to Route 1.",
+      "objectives": [
+        {
+          "id": "obj_1",
+          "type": "talk_npc",
+          "npc_id": "npc_mom",
+          "description": "Talk to Mom in Oakhaven."
+        }
+      ],
+      "rewards": [
+        {
+          "type": "item",
+          "item_id": "potion",
+          "quantity": 3
+        }
+      ]
+    },
+    "main_02": {
+      "name": "Special Delivery",
+      "type": "main",
+      "description": "Deliver the Parcel to the Mayor in Riverbend City.",
+      "objectives": [
+        {
+          "id": "obj_1",
+          "type": "talk_npc",
+          "npc_id": "npc_mayor",
+          "description": "Deliver the parcel to the Mayor."
+        }
+      ],
+      "rewards": [
+        {
+          "type": "coins",
+          "amount": 500
+        }
+      ]
+    },
+    "main_03": {
+      "name": "Rogue Menace",
+      "type": "main",
+      "description": "Defeat the Rogue Leader on Route 2.",
+      "objectives": [
+        {
+          "id": "obj_1",
+          "type": "defeat_trainer",
+          "trainer_id": "trainer_boss_1",
+          "description": "Defeat Rogue Leader."
+        }
+      ],
+      "rewards": [
+        {
+          "type": "item",
+          "item_id": "capture_orb",
+          "quantity": 5
+        }
+      ]
+    }
+  }
 }

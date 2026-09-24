@@ -1,74 +1,158 @@
 {
   "creatures": {
-    "C1": {
-      "name": "Ignipup",
-      "type": ["Ember"],
-      "description": "A small, energetic dog-like creature with a perpetually warm tail.",
+    "florbit": {
+      "name": "Florbit",
+      "type": "grass",
       "base_stats": {
         "hp": 45,
-        "atk": 60,
-        "def": 40,
-        "sp_atk": 50,
-        "sp_def": 40,
-        "spd": 65
+        "attack": 49,
+        "defense": 49,
+        "speed": 45
       },
-      "evolution": {"level": 16, "target": "C2"}
+      "growth_rate": "medium_fast",
+      "level_moves": [
+        {
+          "level": 1,
+          "move": "tackle"
+        },
+        {
+          "level": 5,
+          "move": "vine_whip"
+        }
+      ],
+      "description": "A small rabbit-like creature with leaves for ears."
     },
-    "C2": {
-      "name": "Blazehound",
-      "type": ["Ember"],
-      "description": "A fierce canine shrouded in flames. It runs faster than the wind.",
-      "base_stats": {
-        "hp": 65,
-        "atk": 85,
-        "def": 60,
-        "sp_atk": 70,
-        "sp_def": 60,
-        "spd": 90
-      },
-      "evolution": null
-    },
-    "C3": {
-      "name": "Aquabip",
-      "type": ["Tide"],
-      "description": "An amphibious creature that carries a bubble of water on its head.",
-      "base_stats": {
-        "hp": 55,
-        "atk": 45,
-        "def": 55,
-        "sp_atk": 65,
-        "sp_def": 55,
-        "spd": 40
-      },
-      "evolution": {"level": 16, "target": "C4"}
-    },
-    "C4": {
-      "name": "Tidalisk",
-      "type": ["Tide", "Normal"],
-      "description": "A sleek, serpentine creature that commands ocean currents.",
-      "base_stats": {
-        "hp": 80,
-        "atk": 65,
-        "def": 75,
-        "sp_atk": 90,
-        "sp_def": 80,
-        "spd": 60
-      },
-      "evolution": null
-    },
-    "C5": {
-      "name": "Zephlet",
-      "type": ["Gale"],
-      "description": "A fluffy, floating creature made almost entirely of compressed air.",
+    "barkbug": {
+      "name": "Barkbug",
+      "type": "bug",
       "base_stats": {
         "hp": 40,
-        "atk": 35,
-        "def": 30,
-        "sp_atk": 60,
-        "sp_def": 45,
-        "spd": 85
+        "attack": 30,
+        "defense": 50,
+        "speed": 35
       },
-      "evolution": null
+      "growth_rate": "medium_fast",
+      "level_moves": [
+        {
+          "level": 1,
+          "move": "tackle"
+        },
+        {
+          "level": 6,
+          "move": "bug_bite"
+        }
+      ],
+      "description": "It camouflages as tree bark."
+    },
+    "geopup": {
+      "name": "Geopup",
+      "type": "rock",
+      "base_stats": {
+        "hp": 50,
+        "attack": 60,
+        "defense": 60,
+        "speed": 40
+      },
+      "growth_rate": "medium_slow",
+      "level_moves": [
+        {
+          "level": 1,
+          "move": "tackle"
+        },
+        {
+          "level": 8,
+          "move": "rock_throw"
+        }
+      ],
+      "description": "A sturdy pup made of living stone."
+    },
+    "gloomfox": {
+      "name": "Gloomfox",
+      "type": "dark",
+      "base_stats": {
+        "hp": 40,
+        "attack": 55,
+        "defense": 40,
+        "speed": 65
+      },
+      "growth_rate": "medium_fast",
+      "level_moves": [
+        {
+          "level": 1,
+          "move": "scratch"
+        },
+        {
+          "level": 8,
+          "move": "bite"
+        }
+      ],
+      "description": "It hides in the shadows and plays pranks."
+    },
+    "sproutlet": {
+      "name": "Sproutlet",
+      "type": "grass",
+      "base_stats": {
+        "hp": 60,
+        "attack": 40,
+        "defense": 60,
+        "speed": 40
+      },
+      "growth_rate": "medium_slow",
+      "level_moves": [
+        {
+          "level": 1,
+          "move": "tackle"
+        },
+        {
+          "level": 7,
+          "move": "vine_whip"
+        }
+      ],
+      "description": "A small sprout."
+    },
+    "vinebrute": {
+      "name": "Vinebrute",
+      "type": "grass",
+      "base_stats": {
+        "hp": 90,
+        "attack": 80,
+        "defense": 80,
+        "speed": 50
+      },
+      "growth_rate": "medium_slow",
+      "level_moves": [
+        {
+          "level": 1,
+          "move": "vine_whip"
+        },
+        {
+          "level": 1,
+          "move": "tackle"
+        }
+      ],
+      "description": "A towering beast made of thick vines."
+    },
+    "flapjay": {
+      "name": "Flapjay",
+      "type": "normal",
+      "base_stats": {
+        "hp": 40,
+        "attack": 55,
+        "defense": 30,
+        "speed": 60
+      },
+      "growth_rate": "medium_fast",
+      "level_moves": [
+        {
+          "level": 1,
+          "move": "peck"
+        },
+        {
+          "level": 6,
+          "move": "quick_attack"
+        }
+      ],
+      "description": "A loud blue bird."
     }
   }
 }

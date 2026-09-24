@@ -21,10 +21,11 @@ class WorldState(State):
     def __init__(self, game) -> None:
         super().__init__(game)
         self.world = World(game)
-        self.player = Player(4, 6) # Default start position
+        self.player = Player(4, 6)  # Default start position
         self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.sprites = SpriteGenerator()
         self.interaction = InteractionManager(game)
+        self._paused: bool = False  # True while a sub-state is above us
         
         # Pre-load starting map
         self.world.load_map("starting_town")
@@ -42,6 +43,15 @@ class WorldState(State):
             self.collision = CollisionManager(self.world.current_map)
             if "x" in params: self.player.x = params["x"]
             if "y" in params: self.player.y = params["y"]
+            if "facing" in params:
+                try:
+                    from game.player.player import Direction
+                    if isinstance(params["facing"], str):
+                        self.player.facing = Direction[params["facing"]]
+                    else:
+                        self.player.facing = params["facing"]
+                except KeyError:
+                    pass
             
             # Snap player pixel position
             self.player.pixel_x = float(self.player.x * TILE_SIZE)
@@ -53,12 +63,32 @@ class WorldState(State):
                 self.player.pixel_y + TILE_SIZE / 2
             )
 
+    # ------------------------------------------------------------------ #
+    #  Pause / resume (called by StateMachine when sub-states are pushed)  #
+    # ------------------------------------------------------------------ #
+
+    def pause(self) -> None:
+        """Freeze world updates while a sub-state (pause menu, battle, etc.) is active."""
+        self._paused = True
+
+    def resume(self) -> None:
+        """Resume world updates when the sub-state above us is popped."""
+        self._paused = False
+        # Play world music again in case battle music was playing
+        if self.world.current_map:
+            self.game.audio.music.play_world_music(self.world.current_map.map_id)
+
+    # ------------------------------------------------------------------ #
+    #  Input                                                               #
+    # ------------------------------------------------------------------ #
+
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN:
             action = self.game.input.bindings.get(event.key)
-            if action == Action.CANCEL:
-                # Go back to main menu for now (placeholder for pause)
-                self.game.state_machine.pop()
+            if action in (Action.CANCEL, Action.MENU, Action.START):
+                # Open the pause menu
+                from game.states.pause_state import PauseMenuState
+                self.game.state_machine.push(PauseMenuState(self.game))
             elif action == Action.CONFIRM:
                 # Try interaction
                 ix, iy = self.player.interact()
@@ -67,8 +97,25 @@ class WorldState(State):
                     if target_npc:
                         target_npc.face_player(self.player.x, self.player.y)
                         self.interaction.trigger_interaction(target_npc)
+            elif action == Action.SAVE:
+                from game.core.save_manager import SaveManager
+                success = SaveManager(self.game).save(slot=1)
+                from game.states.dialogue_state import DialogueState
+                msg = "Game saved!" if success else "Save failed."
+                self.game.state_machine.push(DialogueState(self.game, dynamic_text=msg))
+                self.game.audio.play_sound("menu_select")
+
+
+    # ------------------------------------------------------------------ #
+    #  Update                                                              #
+    # ------------------------------------------------------------------ #
 
     def update(self, dt: float) -> None:
+        # The StateMachine only calls update on the TOP state, so this guard
+        # is a safety net for any code that calls update() directly.
+        if self._paused:
+            return
+
         # Handle continuous movement input
         if not self.player.is_moving and not self.world.transitioning:
             dx, dy = 0, 0
@@ -107,6 +154,10 @@ class WorldState(State):
         if not self.player.is_moving and self.world.current_map:
             warp = self.world.current_map.get_warp_at(self.player.x, self.player.y)
             if warp:
+                # Autosave before warping
+                from game.core.save_manager import SaveManager
+                SaveManager(self.game).save(slot=0) # Slot 0 is autosave
+                
                 # Trigger warp transition
                 self.game.state_machine.replace(WorldState(self.game), {
                     "map_id": warp.target_map,
@@ -114,6 +165,31 @@ class WorldState(State):
                     "y": warp.target_y
                 })
                 return
+                
+            # Check wild encounters
+            if self.world.current_map.is_encounter(self.player.x, self.player.y):
+                import random
+                if random.random() < 0.15: # 15% chance per step
+                    wild = self.world.current_map.generate_wild_encounter()
+                    if wild:
+                        from game.states.battle_state import BattleState
+                        from game.player.party import Party
+                        party = Party.get_instance()
+                        # Only start battle if party is not empty and has conscious creatures
+                        if not party.is_empty() and any(c.current_hp > 0 for c in party.creatures):
+                            # Play transition sound or stop music here if needed
+                            self.game.state_machine.push(BattleState(self.game, wild_creature=wild))
+                            return
+                
+            # Check trainer line of sight
+            from game.world.trainer import Trainer
+            for npc in self.world.current_map.npcs:
+                if isinstance(npc, Trainer) and not npc.has_battled:
+                    if self._check_trainer_sight(npc):
+                        npc.face_player(self.player.x, self.player.y)
+                        # We could walk the trainer to the player here, but for now just trigger interaction
+                        self.interaction.trigger_interaction(npc)
+                        break
 
         # Update camera to follow player smoothly
         self.camera.follow(
@@ -127,9 +203,35 @@ class WorldState(State):
                 self.world.current_map.height * TILE_SIZE
             )
 
+
+    def _check_trainer_sight(self, trainer) -> bool:
+        from game.player.player import Direction
+        if trainer.sight_range <= 0:
+            return False
+            
+        dx, dy = 0, 0
+        if trainer.facing == Direction.UP: dy = -1
+        elif trainer.facing == Direction.DOWN: dy = 1
+        elif trainer.facing == Direction.LEFT: dx = -1
+        elif trainer.facing == Direction.RIGHT: dx = 1
+        
+        for i in range(1, trainer.sight_range + 1):
+            check_x = trainer.x + dx * i
+            check_y = trainer.y + dy * i
+            
+            if self.player.x == check_x and self.player.y == check_y:
+                return True
+                
+            # Stop vision on collision
+            if not self.collision.is_walkable(check_x, check_y):
+                break
+                
+        return False
+
     def render(self, surface: pygame.Surface) -> None:
         self.game.renderer.clear((0, 0, 0))
         
+
         if not self.world.current_map:
             return
 

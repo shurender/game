@@ -1,37 +1,39 @@
-"""Audio management — BGM and SFX playback with tone synthesis."""
+"""Audio management — SFX playback and master volume control."""
 from __future__ import annotations
 
 import pygame
 import numpy as np
 
 from game.utils.helpers import clamp
-
+from game.audio.music_manager import MusicManager
 
 class AudioManager:
-    """Manages background music and sound effects.
+    """Manages sound effects and delegates BGM to MusicManager.
 
     Provides on-the-fly tone synthesis via numpy so the game can run
     without any external audio files.
     """
 
     def __init__(self) -> None:
-        self._bgm_volume: float = 0.5
+        self.music = MusicManager()
+        
+        self._master_volume: float = 1.0
         self._sfx_volume: float = 0.7
-        self._current_bgm: str | None = None
+        self._sfx_muted: bool = False
+        
         self._synth_cache: dict[str, pygame.mixer.Sound] = {}
         self._initialized: bool = pygame.mixer.get_init() is not None
 
-    # ---- Volume ----
+    # ---- Volume Controls ----
 
     @property
-    def bgm_volume(self) -> float:
-        return self._bgm_volume
+    def master_volume(self) -> float:
+        return self._master_volume
 
-    @bgm_volume.setter
-    def bgm_volume(self, value: float) -> None:
-        self._bgm_volume = clamp(value, 0.0, 1.0)
-        if self._initialized:
-            pygame.mixer.music.set_volume(self._bgm_volume)
+    @master_volume.setter
+    def master_volume(self, value: float) -> None:
+        self._master_volume = clamp(value, 0.0, 1.0)
+        self.music.master_volume = self._master_volume
 
     @property
     def sfx_volume(self) -> float:
@@ -40,6 +42,30 @@ class AudioManager:
     @sfx_volume.setter
     def sfx_volume(self, value: float) -> None:
         self._sfx_volume = clamp(value, 0.0, 1.0)
+
+    @property
+    def sfx_muted(self) -> bool:
+        return self._sfx_muted
+        
+    @sfx_muted.setter
+    def sfx_muted(self, value: bool) -> None:
+        self._sfx_muted = value
+
+    # ---- BGM Pass-through (for backward compatibility) ----
+    
+    @property
+    def bgm_volume(self) -> float:
+        return self.music.volume
+        
+    @bgm_volume.setter
+    def bgm_volume(self, value: float) -> None:
+        self.music.volume = value
+
+    def play_bgm(self, path: str, loops: int = -1, fade_ms: int = 1000) -> None:
+        self.music.play_music(path, loops, fade_ms)
+        
+    def stop_bgm(self, fade_ms: int = 500) -> None:
+        self.music.stop_music(fade_ms)
 
     # ---- Synthesis ----
 
@@ -51,15 +77,6 @@ class AudioManager:
         wave: str = "square",
         volume: float = 0.3,
     ) -> pygame.mixer.Sound:
-        """Generate and cache a simple synthesized tone.
-
-        Args:
-            name: Cache key for this tone.
-            frequency: Frequency in Hz.
-            duration: Duration in seconds.
-            wave: Waveform type — ``"sine"``, ``"square"``, or ``"triangle"``.
-            volume: Amplitude scale (0.0 – 1.0).
-        """
         if name in self._synth_cache:
             return self._synth_cache[name]
 
@@ -78,7 +95,7 @@ class AudioManager:
         else:
             samples = np.sin(2 * np.pi * frequency * t)
 
-        # Envelope — fade in/out to avoid audible clicks
+        # Envelope
         attack = min(n_samples // 10, 200)
         release = min(n_samples // 5, 500)
         envelope = np.ones(n_samples)
@@ -91,45 +108,36 @@ class AudioManager:
         return sound
 
     def play_sfx(self, name: str, **synth_kwargs) -> None:
-        """Play a previously-synthesized sound effect by name.
-
-        Extra keyword arguments are forwarded to ``synthesize_tone`` if the
-        sound hasn't been cached yet.
-        """
-        if not self._initialized:
+        """Play a previously-synthesized sound effect by name."""
+        if not self._initialized or self._sfx_muted:
             return
+            
         sound = self.synthesize_tone(name, **synth_kwargs)
-        sound.set_volume(self._sfx_volume)
+        sound.set_volume(self._sfx_volume * self._master_volume)
         sound.play()
 
-    # ---- BGM ----
+    def play_sound(self, name: str, **synth_kwargs) -> None:
+        """Alias for play_sfx."""
+        self.play_sfx(name, **synth_kwargs)
 
-    def play_bgm(self, path: str, loops: int = -1, fade_ms: int = 1000) -> None:
-        """Play background music from a file path."""
-        if not self._initialized:
-            return
-        if self._current_bgm == path:
-            return
-        try:
-            pygame.mixer.music.load(path)
-            pygame.mixer.music.set_volume(self._bgm_volume)
-            pygame.mixer.music.play(loops, fade_ms=fade_ms)
-            self._current_bgm = path
-        except pygame.error:
-            self._current_bgm = None
+    # ---- Hooks ----
 
-    def stop_bgm(self, fade_ms: int = 500) -> None:
-        """Stop background music with a fade-out."""
-        if self._initialized:
-            pygame.mixer.music.fadeout(fade_ms)
-            self._current_bgm = None
-
-    def pause_bgm(self) -> None:
-        """Pause background music."""
-        if self._initialized:
-            pygame.mixer.music.pause()
-
-    def resume_bgm(self) -> None:
-        """Resume paused background music."""
-        if self._initialized:
-            pygame.mixer.music.unpause()
+    def play_menu_sound(self) -> None:
+        """Hook for menu navigation sounds."""
+        self.play_sfx("menu_select", frequency=660, duration=0.1, wave="sine")
+        
+    def play_attack_sound(self) -> None:
+        """Hook for physical attacks."""
+        self.play_sfx("attack_hit", frequency=150, duration=0.2, wave="square", volume=0.5)
+        
+    def play_capture_sound(self) -> None:
+        """Hook for capture throw/wobble."""
+        self.play_sfx("capture_wobble", frequency=300, duration=0.3, wave="triangle")
+        
+    def play_capture_success_sound(self) -> None:
+        """Hook for capture success."""
+        self.play_sfx("capture_success", frequency=880, duration=0.5, wave="sine")
+        
+    def play_level_up_sound(self) -> None:
+        """Hook for level up."""
+        self.play_sfx("level_up", frequency=1000, duration=0.8, wave="sine")

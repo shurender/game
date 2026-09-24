@@ -15,6 +15,8 @@ class Action(Enum):
     CANCEL = auto()
     MENU = auto()
     START = auto()
+    QUEST = auto()
+    SAVE = auto()
 
 
 # Default keyboard bindings
@@ -35,6 +37,8 @@ DEFAULT_BINDINGS: dict[int, Action] = {
     pygame.K_x: Action.CANCEL,
     pygame.K_TAB: Action.MENU,
     pygame.K_p: Action.START,
+    pygame.K_q: Action.QUEST,
+    pygame.K_F5: Action.SAVE,
 }
 
 

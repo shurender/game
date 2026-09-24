@@ -27,9 +27,39 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 DATA_DIR = os.path.join(BASE_DIR, "data")
 SAVE_DIR = os.path.join(BASE_DIR, "saves")
+
+# Asset Subdirectories
 IMAGES_DIR = os.path.join(ASSETS_DIR, "images")
+SPRITES_DIR = os.path.join(IMAGES_DIR, "sprites")
+SPRITESHEETS_DIR = os.path.join(IMAGES_DIR, "spritesheets")
+TILES_DIR = os.path.join(IMAGES_DIR, "tiles")
+CREATURES_DIR = os.path.join(IMAGES_DIR, "creatures")
+ICONS_DIR = os.path.join(IMAGES_DIR, "icons")
+
 SOUNDS_DIR = os.path.join(ASSETS_DIR, "sounds")
+SFX_DIR = os.path.join(SOUNDS_DIR, "sfx")
+MUSIC_DIR = os.path.join(ASSETS_DIR, "music")
+BGM_DIR = os.path.join(ASSETS_DIR, "audio", "bgm")
+
 FONTS_DIR = os.path.join(ASSETS_DIR, "fonts")
+
+# Standard audio templates and directory map
+BGM_TEMPLATE = "assets/audio/bgm/{name}.ogg"
+
+ASSET_DIRS = {
+    "root": ASSETS_DIR,
+    "images": IMAGES_DIR,
+    "sprites": SPRITES_DIR,
+    "spritesheets": SPRITESHEETS_DIR,
+    "tiles": TILES_DIR,
+    "creatures": CREATURES_DIR,
+    "icons": ICONS_DIR,
+    "sounds": SOUNDS_DIR,
+    "sfx": SFX_DIR,
+    "music": MUSIC_DIR,
+    "bgm": BGM_DIR,
+    "fonts": FONTS_DIR,
+}
 
 # --- Colors ---
 COLORS = {

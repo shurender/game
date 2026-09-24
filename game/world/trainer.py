@@ -8,9 +8,14 @@ class Trainer(NPC):
     """An NPC that also has a battle configuration."""
     
     def __init__(self, npc_id: str, name: str, x: int, y: int, sprite_name: str, 
-                 facing: Direction, dialogue_id: str, trainer_data: dict):
+                 facing: Direction, dialogue_id: str, trainer_id: str):
         super().__init__(npc_id, name, x, y, sprite_name, facing, dialogue_id)
         
-        self.trainer_data = trainer_data
+        self.trainer_id = trainer_id
+        
+        from game.world.trainer_factory import TrainerFactory
+        tf = TrainerFactory.get_instance()
+        self.trainer_data = tf.get_trainer_data(trainer_id) or {}
+        
         self.has_battled = False
-        self.sight_range = trainer_data.get("sight_range", 4)
+        self.sight_range = self.trainer_data.get("sight_range", 4)

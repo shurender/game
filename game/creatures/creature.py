@@ -104,3 +104,35 @@ class Creature:
     @property
     def is_fainted(self) -> bool:
         return self.current_hp <= 0
+
+    def to_dict(self) -> dict:
+        return {
+            "species_id": self.species.species_id,
+            "level": self._level,
+            "nickname": self.nickname if self.nickname != self.species.name else None,
+            "xp": self.xp,
+            "current_hp": self.current_hp,
+            "status": self.status.name,
+            "moves": self.moves.copy()
+        }
+        
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Creature':
+        from game.creatures.creature_factory import CreatureFactory
+        cf = CreatureFactory.get_instance()
+        species = cf.get_species(data["species_id"])
+        if not species:
+            raise ValueError(f"Unknown species: {data['species_id']}")
+            
+        c = cls(species, data["level"], data.get("nickname"))
+        c.xp = data.get("xp", c.xp)
+        c.current_hp = data.get("current_hp", c.stats.hp)
+        
+        status_name = data.get("status", "NONE")
+        try:
+            c.status = StatusEffect[status_name]
+        except KeyError:
+            c.status = StatusEffect.NONE
+            
+        c.moves = data.get("moves", []).copy()
+        return c
