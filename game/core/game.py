@@ -9,6 +9,7 @@ from game.core.input_handler import InputHandler
 from game.core.asset_manager import AssetManager
 from game.rendering.renderer import Renderer
 from game.audio.audio_manager import AudioManager
+from game.core.settings_manager import SettingsManager
 
 
 class Game:
@@ -35,6 +36,10 @@ class Game:
         self.assets = AssetManager()
         self.renderer = Renderer(self.screen)
         self.audio = AudioManager()
+        
+        # Settings
+        self.settings = SettingsManager(self)
+        self.settings.load()
 
         # Pre-synthesize common UI sounds
         self.audio.synthesize_tone(

@@ -12,6 +12,7 @@ from config import DATA_DIR
 from game.world.tile import get_tile_info
 from game.world.npc import NPC
 from game.world.trainer import Trainer
+from game.world.shop_npc import ShopNPC
 from game.player.player import Direction
 
 
@@ -36,6 +37,7 @@ class TileMap:
         self.ground: list[list[int]] = []
         self.collision: list[list[int]] = []
         self.encounter: list[list[int]] = []
+        self.encounter_table: list[dict] = []
         self.warps: list[Warp] = []
         self.npcs: list[NPC] = []
         self._load_map()
@@ -58,8 +60,14 @@ class TileMap:
         self.ground = layers.get("ground", [])
         self.collision = layers.get("collision", [])
         self.encounter = layers.get("encounter", [])
+        self.encounter_table = map_data.get("encounter_table", [])
 
+        from game.world.progress_manager import WorldProgressManager
+        pm = WorldProgressManager.get_instance()
+        
         for w in map_data.get("warps", []):
+            if "conditions" in w and not pm.check_conditions(w["conditions"]):
+                continue
             self.warps.append(
                 Warp(
                     w["x"], w["y"], w["target_map"],
@@ -68,23 +76,37 @@ class TileMap:
             )
 
         for n_data in map_data.get("npcs", []):
+            if "conditions" in n_data and not pm.check_conditions(n_data["conditions"]):
+                continue
+                
             facing_map = {
                 "up": Direction.UP, "down": Direction.DOWN,
                 "left": Direction.LEFT, "right": Direction.RIGHT
             }
             facing = facing_map.get(n_data.get("facing", "down"), Direction.DOWN)
             
-            if "trainer_data" in n_data:
-                self.npcs.append(Trainer(
+            if "trainer_id" in n_data:
+                npc = Trainer(
                     n_data["id"], n_data["name"], n_data["x"], n_data["y"],
-                    n_data["sprite"], facing, n_data["dialogue_id"],
-                    n_data["trainer_data"]
-                ))
+                    n_data["sprite"], facing, n_data.get("dialogue_id", ""),
+                    n_data["trainer_id"]
+                )
+            elif "shop_id" in n_data:
+                npc = ShopNPC(
+                    n_data["id"], n_data["name"], n_data["x"], n_data["y"],
+                    n_data["sprite"], facing, n_data.get("dialogue_id", ""),
+                    n_data["shop_id"]
+                )
             else:
-                self.npcs.append(NPC(
+                npc = NPC(
                     n_data["id"], n_data["name"], n_data["x"], n_data["y"],
                     n_data["sprite"], facing, n_data["dialogue_id"]
-                ))
+                )
+                
+            if "conditional_dialogues" in n_data:
+                npc.conditional_dialogues = n_data["conditional_dialogues"]
+                
+            self.npcs.append(npc)
 
     def get_warp_at(self, x: int, y: int) -> Warp | None:
         """Return the warp at a location, if any."""
@@ -111,3 +133,26 @@ class TileMap:
             tile_id = self.ground[y][x]
             return get_tile_info(tile_id).is_encounter
         return False
+        
+    def generate_wild_encounter(self) -> Any | None:
+        """Roll and return a wild creature based on the encounter table."""
+        if not self.encounter_table:
+            return None
+            
+        import random
+        from game.creatures.creature import Creature
+        
+        # Calculate total weight
+        total_weight = sum(entry.get("weight", 10) for entry in self.encounter_table)
+        roll = random.uniform(0, total_weight)
+        
+        current = 0
+        for entry in self.encounter_table:
+            current += entry.get("weight", 10)
+            if roll <= current:
+                level_min = entry.get("level_min", 2)
+                level_max = entry.get("level_max", level_min)
+                level = random.randint(level_min, level_max)
+                return Creature(entry["creature"], level)
+                
+        return None

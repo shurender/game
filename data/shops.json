@@ -1,0 +1,18 @@
+{
+  "shops": {
+    "shop_oakhaven": {
+      "name": "Oakhaven Mart",
+      "inventory": [
+        "potion",
+        "capture_orb"
+      ]
+    },
+    "shop_riverbend": {
+      "name": "Riverbend Supply",
+      "inventory": [
+        "potion",
+        "capture_orb"
+      ]
+    }
+  }
+}

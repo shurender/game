@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "player_name": "Player",
+  "position": {
+    "x": 3,
+    "y": 4,
+    "facing": "RIGHT",
+    "map_id": "starting_town"
+  },
+  "party": {
+    "party": [],
+    "storage": []
+  },
+  "inventory": {},
+  "wallet": {
+    "coins": 3000
+  },
+  "quests": {
+    "quests": [
+      {
+        "id": "main_01",
+        "status": "NOT_STARTED",
+        "objectives": [
+          {
+            "id": "obj_1",
+            "current_progress": 0
+          }
+        ]
+      },
+      {
+        "id": "main_02",
+        "status": "NOT_STARTED",
+        "objectives": [
+          {
+            "id": "obj_1",
+            "current_progress": 0
+          }
+        ]
+      },
+      {
+        "id": "main_03",
+        "status": "NOT_STARTED",
+        "objectives": [
+          {
+            "id": "obj_1",
+            "current_progress": 0
+          }
+        ]
+      }
+    ]
+  },
+  "progress": {
+    "flags": {}
+  },
+  "settings": {}
+}

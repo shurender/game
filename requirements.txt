@@ -1,3 +1,4 @@
-pygame-ce
+pygame-ce>=2.5.0
 numpy
 pytest
+pyinstaller

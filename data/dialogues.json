@@ -1,41 +1,72 @@
 {
   "dialogues": {
     "mom_intro": {
-      "nodes": {
-        "start": {
-          "speaker": "Mom",
-          "text": "Good morning! Are you ready for your adventure?",
-          "next": "ask_ready"
-        },
-        "ask_ready": {
-          "speaker": "Mom",
-          "text": "Do you have everything you need?",
-          "choices": [
-            {"text": "Yes!", "next": "end_yes"},
-            {"text": "Not yet.", "next": "end_no"}
-          ]
-        },
-        "end_yes": {
-          "speaker": "Mom",
-          "text": "Great! Good luck out there!"
-        },
-        "end_no": {
-          "speaker": "Mom",
-          "text": "Well, take your time and be careful."
-        }
+      "start": {
+        "speaker": "Mom",
+        "text": "Good morning! Professor Cedar was looking for you. He's at his lab next door.",
+        "next": "end"
       }
     },
-    "rival_challenge": {
-      "nodes": {
-        "start": {
-          "speaker": "Rival",
-          "text": "Hey! I've been waiting for you!",
-          "next": "challenge"
-        },
-        "challenge": {
-          "speaker": "Rival",
-          "text": "Let's see who's stronger in a battle!"
-        }
+    "prof_intro": {
+      "start": {
+        "speaker": "Prof. Cedar",
+        "text": "Ah, there you are! Are you ready for your own creature?",
+        "choices": [
+          {
+            "text": "Yes!",
+            "next": "give_florbit"
+          },
+          {
+            "text": "Not yet.",
+            "next": "end"
+          }
+        ]
+      },
+      "give_florbit": {
+        "speaker": "Prof. Cedar",
+        "text": "Here is a Florbit! Take good care of it.",
+        "actions": [
+          {
+            "type": "give_creature",
+            "creature": "florbit",
+            "level": 5
+          },
+          {
+            "type": "set_flag",
+            "flag": "has_creature",
+            "value": true
+          }
+        ],
+        "next": "prof_quest"
+      },
+      "prof_quest": {
+        "speaker": "Prof. Cedar",
+        "text": "I need a favor. Could you deliver this parcel to the Mayor in Riverbend City?",
+        "actions": [
+          {
+            "type": "give_item",
+            "item": "parcel",
+            "qty": 1
+          }
+        ],
+        "next": "end"
+      }
+    },
+    "mayor_intro": {
+      "start": {
+        "speaker": "Mayor",
+        "text": "Did you bring the parcel from Professor Cedar?",
+        "choices": [
+          {
+            "text": "Yes",
+            "next": "mayor_thanks"
+          }
+        ]
+      },
+      "mayor_thanks": {
+        "speaker": "Mayor",
+        "text": "Thank you! But we have a bigger problem... Rogues have taken over Route 2!",
+        "next": "end"
       }
     }
   }

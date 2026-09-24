@@ -1,3 +1,92 @@
 {
-  "trainers": {}
+  "trainers": {
+    "trainer_lass_1": {
+      "name": "Lass Mia",
+      "dialogue_intro": "My Flapjay is so cute!",
+      "dialogue_defeat": "Oh no!",
+      "party": [
+        {
+          "id": "flapjay",
+          "level": 4
+        }
+      ],
+      "reward_money": 60
+    },
+    "trainer_youngster_1": {
+      "name": "Youngster Joey",
+      "dialogue_intro": "I like shorts!",
+      "dialogue_defeat": "They're comfy and easy to wear...",
+      "party": [
+        {
+          "id": "barkbug",
+          "level": 4
+        },
+        {
+          "id": "barkbug",
+          "level": 4
+        }
+      ],
+      "reward_money": 80
+    },
+    "trainer_bug_catcher_1": {
+      "name": "Bug Catcher Tim",
+      "dialogue_intro": "Bugs are the best!",
+      "dialogue_defeat": "My bugs!",
+      "party": [
+        {
+          "id": "barkbug",
+          "level": 6
+        }
+      ],
+      "reward_money": 70
+    },
+    "trainer_hiker_1": {
+      "name": "Hiker Dan",
+      "dialogue_intro": "Watch your step in here!",
+      "dialogue_defeat": "I stumbled!",
+      "party": [
+        {
+          "id": "geopup",
+          "level": 8
+        }
+      ],
+      "reward_money": 150
+    },
+    "trainer_grunt_1": {
+      "name": "Rogue Grunt",
+      "dialogue_intro": "You can't pass!",
+      "dialogue_defeat": "Boss, I failed!",
+      "party": [
+        {
+          "id": "gloomfox",
+          "level": 10
+        },
+        {
+          "id": "barkbug",
+          "level": 10
+        }
+      ],
+      "reward_money": 200
+    },
+    "trainer_boss_1": {
+      "name": "Rogue Leader",
+      "dialogue_intro": "I won't let some kid stop my plans!",
+      "dialogue_defeat": "Impossible!",
+      "party": [
+        {
+          "id": "gloomfox",
+          "level": 12
+        },
+        {
+          "id": "geopup",
+          "level": 12
+        },
+        {
+          "id": "vinebrute",
+          "level": 14
+        }
+      ],
+      "reward_money": 1000
+    }
+  }
 }

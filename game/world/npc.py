@@ -15,9 +15,20 @@ class NPC:
         self.sprite_name = sprite_name
         self.facing = facing
         self.dialogue_id = dialogue_id
+        self.conditional_dialogues = []
         
         # Interactions
         self.interaction_range = 1
+        
+    def get_current_dialogue(self) -> str:
+        from game.world.progress_manager import WorldProgressManager
+        pm = WorldProgressManager.get_instance()
+        
+        for cond_dial in self.conditional_dialogues:
+            if pm.check_conditions(cond_dial.get("conditions", {})):
+                return cond_dial["dialogue_id"]
+                
+        return self.dialogue_id
         
     def face_player(self, player_x: int, player_y: int) -> None:
         """Turn to face the player when interacted with."""

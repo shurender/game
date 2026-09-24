@@ -15,5 +15,5 @@ class DialogueManager:
         """Return a specific node within a dialogue."""
         dialogue = self.get_dialogue(dialogue_id)
         if dialogue:
-            return dialogue.get("nodes", {}).get(node_id)
+            return dialogue.get(node_id)
         return None
