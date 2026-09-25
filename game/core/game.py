@@ -24,7 +24,16 @@ class Game:
         pygame.init()
         pygame.mixer.init(frequency=22050, size=-16, channels=1, buffer=512)
 
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        # Settings
+        self.settings = SettingsManager(self)
+
+        flags = pygame.SCALED
+        if self.settings.get("fullscreen"):
+            flags |= pygame.FULLSCREEN
+        else:
+            flags |= pygame.RESIZABLE
+
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags)
         pygame.display.set_caption(TITLE)
 
         self.clock = pygame.time.Clock()
@@ -37,8 +46,6 @@ class Game:
         self.renderer = Renderer(self.screen)
         self.audio = AudioManager()
         
-        # Settings
-        self.settings = SettingsManager(self)
         self.settings.load()
 
         # Pre-synthesize common UI sounds
@@ -71,6 +78,21 @@ class Game:
                 if event.type == pygame.QUIT:
                     self.running = False
                     return
+                elif event.type == pygame.VIDEORESIZE:
+                    if hasattr(self, 'renderer') and self.renderer:
+                        self.renderer.surface = self.screen
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    # Left click acts as Enter / Confirm everywhere in the game
+                    virtual_key_event = pygame.event.Event(
+                        pygame.KEYDOWN,
+                        key=pygame.K_RETURN,
+                        mod=pygame.KMOD_NONE,
+                        unicode="\r",
+                        scancode=pygame.K_RETURN
+                    )
+                    self.input.handle_event(virtual_key_event)
+                    self.state_machine.handle_event(virtual_key_event)
+
                 self.input.handle_event(event)
                 self.state_machine.handle_event(event)
 

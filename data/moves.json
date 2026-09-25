@@ -71,6 +71,80 @@
       "accuracy": 100,
       "pp": 10,
       "description": "Restores the user's HP."
+    },
+    "tackle": {
+      "name": "Tackle",
+      "type": "Normal",
+      "category": "Physical",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 35,
+      "description": "A physical charge attack."
+    },
+    "scratch": {
+      "name": "Scratch",
+      "type": "Normal",
+      "category": "Physical",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 35,
+      "description": "Scratches with sharp claws."
+    },
+    "vine_whip": {
+      "name": "Vine Whip",
+      "type": "Grass",
+      "category": "Physical",
+      "power": 45,
+      "accuracy": 100,
+      "pp": 25,
+      "description": "Strikes the target with slender vines."
+    },
+    "bug_bite": {
+      "name": "Bug Bite",
+      "type": "Bug",
+      "category": "Physical",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 20,
+      "description": "The user bites the target."
+    },
+    "rock_throw": {
+      "name": "Rock Throw",
+      "type": "Terra",
+      "category": "Physical",
+      "power": 50,
+      "accuracy": 90,
+      "pp": 15,
+      "description": "Hurls a small rock at the target."
+    },
+    "peck": {
+      "name": "Peck",
+      "type": "Gale",
+      "category": "Physical",
+      "power": 35,
+      "accuracy": 100,
+      "pp": 35,
+      "description": "Jabs the target with a beak or horn."
+    },
+    "quick_attack": {
+      "name": "Quick Attack",
+      "type": "Normal",
+      "category": "Physical",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 30,
+      "priority": 1,
+      "description": "An almost invisibly fast attack that hits first."
+    },
+    "bite": {
+      "name": "Bite",
+      "type": "Dark",
+      "category": "Physical",
+      "power": 60,
+      "accuracy": 100,
+      "pp": 25,
+      "description": "Bites with vicious fangs."
     }
   }
 }
+

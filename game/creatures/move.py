@@ -62,8 +62,30 @@ class MoveFactory:
         """Get a copy of a move (so PP can be modified independently)."""
         base_move = self.moves_db.get(move_id)
         if not base_move:
-            raise ValueError(f"Unknown move ID: {move_id}")
-            
+            # Case-insensitive or normalized lookup
+            target_slug = str(move_id).lower().replace(" ", "_")
+            for k, m in self.moves_db.items():
+                if k.lower() == target_slug or m.name.lower().replace(" ", "_") == target_slug:
+                    base_move = m
+                    break
+
+        if not base_move:
+            # Fallback to Tackle or first move in DB
+            base_move = self.moves_db.get("tackle") or self.moves_db.get("M1") or next(iter(self.moves_db.values()), None)
+            if not base_move:
+                base_move = Move(
+                    move_id=move_id,
+                    name=str(move_id).replace("_", " ").title(),
+                    type="Normal",
+                    category="Physical",
+                    power=40,
+                    accuracy=100,
+                    pp=35,
+                    max_pp=35,
+                    priority=0,
+                    description="A basic attack."
+                )
+
         # Return a fresh instance for the creature
         return Move(
             move_id=base_move.move_id,

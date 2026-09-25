@@ -9,27 +9,35 @@ from game.creatures.type_system import TypeSystem
 
 class Species:
     """Immutable base data for a creature species."""
-    def __init__(self, species_id: str, name: str, types: list[str], 
+    def __init__(self, species_id: str, name: str, types: list[str] | str, 
                  base_stats: dict, description: str):
         self.species_id = species_id
         self.name = name
-        self.types = types
+        self.types = [types] if isinstance(types, str) else list(types)
         self.description = description
         
         self.base_stats = Stats(
             hp=base_stats.get("hp", 10),
-            atk=base_stats.get("atk", 10),
-            def_=base_stats.get("def", 10),
-            sp_atk=base_stats.get("sp_atk", 10),
-            sp_def=base_stats.get("sp_def", 10),
-            spd=base_stats.get("spd", 10)
+            atk=base_stats.get("atk", base_stats.get("attack", 10)),
+            def_=base_stats.get("def", base_stats.get("defense", 10)),
+            sp_atk=base_stats.get("sp_atk", base_stats.get("sp_attack", base_stats.get("special_attack", 10))),
+            sp_def=base_stats.get("sp_def", base_stats.get("sp_defense", base_stats.get("special_defense", 10))),
+            spd=base_stats.get("spd", base_stats.get("speed", 10))
         )
 
 
 class Creature:
     """An individual instance of a creature species."""
     
-    def __init__(self, species: Species, level: int, nickname: str = None):
+    def __init__(self, species: Species | str, level: int, nickname: str = None):
+        if isinstance(species, str):
+            from game.creatures.creature_factory import CreatureFactory
+            cf = CreatureFactory.get_instance()
+            sp = cf.get_species(species)
+            if sp:
+                species = sp
+            else:
+                species = Species(species, species.capitalize(), ["Normal"], {}, "")
         self.species = species
         self.nickname = nickname or species.name
         self._level = level

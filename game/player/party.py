@@ -52,6 +52,19 @@ class PartyManager:
             return True
         return False
         
+    @property
+    def creatures(self) -> list[Creature]:
+        """Alias for self.party."""
+        return self.party
+
+    def is_empty(self) -> bool:
+        """Check if party has no creatures."""
+        return len(self.party) == 0
+
+    def is_full(self) -> bool:
+        """Check if party is full."""
+        return len(self.party) >= self.max_party_size
+
     def has_usable_creatures(self) -> bool:
         """Checks if the party has any non-fainted creatures left."""
         return any(not c.is_fainted for c in self.party)
@@ -82,3 +95,7 @@ class PartyManager:
             except Exception as e:
                 import logging
                 logging.getLogger("risu").error(f"Failed to load storage creature: {e}")
+
+
+# Alias for backward-compatibility
+Party = PartyManager

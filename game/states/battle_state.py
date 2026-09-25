@@ -38,7 +38,7 @@ class CreatureSprite:
         # Load sprite via asset manager or use safe fallback
         self.image = None
         if asset_manager:
-            species_id = getattr(getattr(creature, "species", None), "species_id", creature.id).lower()
+            species_id = getattr(getattr(creature, "species", None), "species_id", getattr(creature, "id", "florbit")).lower()
             sprite_name = f"creatures/{species_id}_{'back' if is_player else 'front'}"
             if asset_manager.has_image(sprite_name):
                 self.image = asset_manager.get_image(sprite_name, size=(128, 128))
@@ -98,8 +98,9 @@ class CreatureSprite:
 
 
 class BattleState(State):
-    def __init__(self, game) -> None:
+    def __init__(self, game, wild_creature=None, enemy_creature=None) -> None:
         super().__init__(game)
+        self._init_enemy_creature = enemy_creature or wild_creature
         self.font = self.game.assets.get_font(24)
         self.name_font = self.game.assets.get_font(20)
         
@@ -129,27 +130,27 @@ class BattleState(State):
         self.enemy_hit_flash = HitFlash()
         self._entrance_anim: CreatureEntranceAnim | None = None
         self._faint_anim: CreatureFaintAnim | None = None
+        self._capture_anim: CaptureAnimation | None = None
         
     def enter(self, params: dict[str, Any] | None = None) -> None:
         params = params or {}
         
         party_mgr = PartyManager.get_instance()
         player_creature = party_mgr.get_first_available()
-        enemy_creature = params.get("enemy_creature")
+        enemy_creature = params.get("enemy_creature") or params.get("wild_creature") or getattr(self, "_init_enemy_creature", None)
         
         if not player_creature or not enemy_creature:
             # Fallback to test creatures if none provided
             cf = CreatureFactory.get_instance()
             if not player_creature:
-                player_creature = cf.create_creature("C1", 5)  # Ignipup
-                mf = MoveFactory.get_instance()
-                player_creature.moves = ["M1", "M2"]
+                first_sp = next(iter(cf.species_db.keys()), "florbit")
+                player_creature = cf.create_creature(first_sp, 5)
                 party_mgr.add_creature(player_creature)
                 
             if not enemy_creature:
-                enemy_creature = cf.create_creature("C3", 5)   # Aquabip
-                mf = MoveFactory.get_instance()
-                enemy_creature.moves = ["M1", "M3"]
+                sp_keys = list(cf.species_db.keys())
+                second_sp = sp_keys[1] if len(sp_keys) > 1 else (sp_keys[0] if sp_keys else "barkbug")
+                enemy_creature = cf.create_creature(second_sp, 5)
             
         self.battle = Battle(player_creature, enemy_creature)
         
@@ -205,32 +206,32 @@ class BattleState(State):
         
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN:
-            if self.phase in ("INTRO", "ANIMATE_EVENTS"):
-                if event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z):
+            if self.phase in ("INTRO", "ANIMATE_EVENTS", "BATTLE_END", "ANIMATE_CAPTURE_END", "ANIMATE_CAPTURE_FAIL"):
+                if event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z, pygame.K_e):
                     if not self.dialogue_box.is_finished:
                         self.dialogue_box.skip_typing()
                     else:
                         self._advance_phase()
                         
             elif self.phase == "PLAYER_TURN":
-                if event.key == pygame.K_UP:
+                if event.key in (pygame.K_UP, pygame.K_w):
                     self.main_menu.move_up()
                     self.game.audio.play_sound("menu_move")
-                elif event.key == pygame.K_DOWN:
+                elif event.key in (pygame.K_DOWN, pygame.K_s):
                     self.main_menu.move_down()
                     self.game.audio.play_sound("menu_move")
-                elif event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z):
+                elif event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z, pygame.K_e):
                     self.game.audio.play_sound("menu_select")
                     self.main_menu.select()
                     
             elif self.phase == "MOVE_SELECT":
-                if event.key == pygame.K_UP:
+                if event.key in (pygame.K_UP, pygame.K_w):
                     self.move_menu.move_up()
                     self.game.audio.play_sound("menu_move")
-                elif event.key == pygame.K_DOWN:
+                elif event.key in (pygame.K_DOWN, pygame.K_s):
                     self.move_menu.move_down()
                     self.game.audio.play_sound("menu_move")
-                elif event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z):
+                elif event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z, pygame.K_e):
                     self.game.audio.play_sound("menu_select")
                     self.move_menu.select()
                 elif event.key in (pygame.K_ESCAPE, pygame.K_x):
@@ -308,10 +309,14 @@ class BattleState(State):
     def _on_item_used_in_battle(self, item_id: str, creature) -> None:
         """Called by InventoryState after an item use during battle."""
         from game.inventory.inventory import Inventory
+        from game.inventory.item_factory import ItemFactory
         from game.battle.capture import execute_capture
+        from game.rendering.animation import CaptureAnimation
         
         inv = Inventory.get_instance()
-        item = inv.items[item_id]
+        item = ItemFactory.get_instance().get(item_id)
+        if not item:
+            return
         
         if item.category == "Capture":
             if self.is_trainer:
@@ -327,15 +332,38 @@ class BattleState(State):
                 self.current_event_idx = 0
                 return
                 
-            # Start capture animation
-            self.phase = "ANIMATE_CAPTURE"
-            self.capture_step = 0
-            self.capture_timer = 0.0
-            
             # Consume item and calculate success
             inv.remove(item_id, 1)
-            self.capture_data = execute_capture(
-                creature, item
+            target_creature = creature or self.battle.enemy_creature
+            success, shakes, location = execute_capture(
+                target_creature, item
+            )
+            self.capture_data = {
+                "success": success,
+                "shakes": shakes,
+                "location": location
+            }
+            
+            # Start capture animation
+            self.phase = "ANIMATE_CAPTURE"
+            start_pos = (int(self.player_sprite.x + 30), int(self.player_sprite.y + 30))
+            target_pos = (int(self.enemy_sprite.x + 30), int(self.enemy_sprite.y + 30))
+            
+            def _on_finish():
+                if success:
+                    loc_text = "Party" if location == "PARTY" else "Storage Box"
+                    self.dialogue_box.start_text("", f"Gotcha! {target_creature.name} was caught!\nSent to {loc_text}.")
+                    self.phase = "ANIMATE_CAPTURE_END"
+                else:
+                    self.dialogue_box.start_text("", "Oh no! The creature broke free!")
+                    self.phase = "ANIMATE_CAPTURE_FAIL"
+                    
+            self._capture_anim = CaptureAnimation(
+                start=start_pos,
+                target=target_pos,
+                shakes=shakes,
+                success=success,
+                on_finish=_on_finish
             )
             return
             
@@ -439,6 +467,14 @@ class BattleState(State):
             self.dialogue_box.skip_typing()
         elif self.phase == "ANIMATE_CAPTURE_END":
             self.phase = "BATTLE_END"
+        elif self.phase == "ANIMATE_CAPTURE_FAIL":
+            self.phase = "ANIMATE_EVENTS"
+            self._capture_anim = None
+            # Enemy attacks after player fails capture
+            enemy_action = self.enemy_ai.choose_action(self.battle, self.battle.enemy_creature, self.battle.player_creature)
+            self.turn_result = BattleEngine.process_turn(self.battle, BattleAction(self.battle.player_creature, "ITEM"), enemy_action)
+            self.current_event_idx = 0
+            self._process_next_event()
         elif self.phase == "ANIMATE_EVENTS":
             if self.turn_result and self.current_event_idx < len(self.turn_result.events):
                 self._process_next_event()
@@ -489,6 +525,19 @@ class BattleState(State):
                     self.dialogue_box.start_text("", f"What will {self.battle.player_creature.name} do?")
                     self.dialogue_box.skip_typing()
         elif self.phase == "BATTLE_END":
+            if self.battle.winner == "ENEMY":
+                party_mgr = PartyManager.get_instance()
+                for c in party_mgr.party:
+                    c.current_hp = c.stats.hp
+                    c.status = None
+                from game.states.world_state import WorldState
+                self.game.state_machine.clear()
+                self.game.state_machine.push(WorldState(self.game), {
+                    "map_id": "player_house",
+                    "x": 4,
+                    "y": 6
+                })
+                return
             self.game.state_machine.pop()
             
             # Fire Quest Events
@@ -518,9 +567,10 @@ class BattleState(State):
                     
                     if hasattr(self.trainer_npc, "trainer_data"):
                         rewards = self.trainer_npc.trainer_data.get("rewards", {})
-                        if "coins" in rewards:
-                            Wallet.get_instance().coins += rewards["coins"]
-                            logger.info(f"Received {rewards['coins']} coins from {self.trainer_npc.name}!")
+                        coins = self.trainer_npc.trainer_data.get("reward_money", rewards.get("coins", 0))
+                        if coins > 0:
+                            Wallet.get_instance().coins += coins
+                            logger.info(f"Received {coins} coins from {self.trainer_npc.name}!")
                         for item in rewards.get("items", []):
                             Inventory.get_instance().add(item["item_id"], item.get("quantity", 1))
                             logger.info(f"Received {item.get('quantity', 1)}x {item['item_id']} from {self.trainer_npc.name}!")
@@ -579,56 +629,6 @@ class BattleState(State):
             self.main_menu.update(dt)
         elif self.phase == "MOVE_SELECT" and self.move_menu:
             self.move_menu.update(dt)
-        elif self.phase == "ANIMATE_CAPTURE":
-            self.capture_timer += dt
-            data = self.capture_data
-            
-            # Step 0: Throwing the ball (1 second)
-            if self.capture_step == 0:
-                progress = min(1.0, self.capture_timer / 1.0)
-                data["ball_x"] = self.player_sprite.x + (self.enemy_sprite.x - self.player_sprite.x) * progress
-                # Arc logic
-                arc = math.sin(progress * math.pi) * 100
-                data["ball_y"] = self.player_sprite.y + (self.enemy_sprite.y - self.player_sprite.y) * progress - arc
-                
-                if progress >= 1.0:
-                    self.capture_step = 1
-                    self.capture_timer = 0.0
-                    
-            # Step 1: Creature sucked into ball (0.5s pause)
-            elif self.capture_step == 1:
-                # The render method will hide the enemy sprite temporarily
-                if self.capture_timer >= 0.5:
-                    self.capture_step = 2
-                    self.capture_timer = 0.0
-                    
-            # Step 2: Shaking
-            elif self.capture_step >= 2 and self.capture_step < 2 + data["shakes"]:
-                # Shake left, then right, then center over 0.8 seconds
-                progress = min(1.0, self.capture_timer / 0.8)
-                data["ball_shake_angle"] = math.sin(progress * math.pi * 2) * 30
-                
-                if progress >= 1.0:
-                    self.capture_step += 1
-                    self.capture_timer = 0.0
-                    
-            # Step 3: Result
-            elif self.capture_step == 2 + data["shakes"]:
-                if self.capture_timer >= 0.5:
-                    if data["success"]:
-                        self.dialogue_box.start_text("", f"Gotcha! {self.battle.enemy_creature.name} was caught!\nSent to {data['location']}.")
-                        self.phase = "ANIMATE_CAPTURE_END"
-                    else:
-                        self.dialogue_box.start_text("", f"Oh no! The creature broke free!")
-                        self.phase = "ANIMATE_EVENTS"
-                        self.capture_data = None
-                        
-                        # Process enemy turn because player used an item
-                        enemy_action = self.enemy_ai.choose_action(self.battle, self.battle.enemy_creature, self.battle.player_creature)
-                        # Create empty result to just let the enemy attack
-                        self.turn_result = BattleEngine.process_turn(self.battle, BattleAction(self.battle.player_creature, "ITEM"), enemy_action)
-                        self.current_event_idx = 0
-                        # But wait! We're already animating an event via the dialogue box. The enemy turn will begin when we click through.
             
     def render(self, surface: pygame.Surface) -> None:
         # Apply screen shake offset

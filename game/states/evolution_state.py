@@ -65,7 +65,7 @@ class EvolutionState(State):
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type != pygame.KEYDOWN:
             return
-        if event.key in (pygame.K_RETURN, pygame.K_z, pygame.K_SPACE):
+        if event.key in (pygame.K_RETURN, pygame.K_z, pygame.K_SPACE, pygame.K_e):
             if self._phase in ("REVEAL", "STATS"):
                 if self._typewriter and not self._typewriter.is_complete:
                     self._typewriter.skip()

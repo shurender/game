@@ -13,7 +13,7 @@ logger = logging.getLogger("risu")
 class DialogueState(State):
     """Handles the display and progression of dialogue."""
     
-    def __init__(self, game, dialogue_id: str = "", on_complete: Callable | None = None, dynamic_text: str = None):
+    def __init__(self, game, dialogue_id: str = "", on_complete: Callable | None = None, dynamic_text: str = None, speaker: str = ""):
         super().__init__(game)
         self.dialogue_id = dialogue_id
         self.on_complete_callback = on_complete
@@ -28,7 +28,8 @@ class DialogueState(State):
         
         if dynamic_text:
             self.current_node_data = {}
-            self.box.start_text(speaker="", text=dynamic_text)
+            self.current_node_id = ""
+            self.box.start_text(speaker=speaker, text=dynamic_text)
         else:
             # Start at the root node
             self.current_node_data = {}
@@ -36,6 +37,10 @@ class DialogueState(State):
             self._load_node(self.current_node_id)
         
     def _load_node(self, node_id: str) -> None:
+        if not node_id or node_id == "end":
+            self._close()
+            return
+
         node = self.dialogue_manager.get_node(self.dialogue_id, node_id)
         if not node:
             logger.error(f"Dialogue node not found: {self.dialogue_id}.{node_id}")
@@ -67,15 +72,28 @@ class DialogueState(State):
             inv.add(action.get("item", ""), action.get("qty", 1))
             logger.info(f"Dialogue Action: Received item {action.get('item')} x{action.get('qty', 1)}")
         elif action_type == "give_creature":
-            from game.player.party import Party
-            from game.creatures.creature import Creature
-            party = Party.get_instance()
+            from game.player.party import PartyManager
+            from game.creatures.creature_factory import CreatureFactory
+            party = PartyManager.get_instance()
             if not party.is_full():
                 creature_id = action.get("creature", "")
                 level = action.get("level", 5)
-                c = Creature(creature_id, level)
+                cf = CreatureFactory.get_instance()
+                c = cf.create_creature(creature_id, level)
                 party.add_creature(c)
                 logger.info(f"Dialogue Action: Received creature {creature_id} Lv{level}")
+        elif action_type == "start_quest":
+            from game.quests.quest_manager import QuestManager
+            qm = QuestManager.get_instance()
+            quest_id = action.get("quest") or action.get("quest_id", "")
+            if quest_id:
+                qm.start_quest(quest_id)
+                logger.info(f"Dialogue Action: Started quest {quest_id}")
+        elif action_type == "remove_item":
+            from game.inventory.inventory import Inventory
+            inv = Inventory.get_instance()
+            inv.remove(action.get("item", ""), action.get("qty", 1))
+            logger.info(f"Dialogue Action: Removed item {action.get('item')} x{action.get('qty', 1)}")
         
     def _close(self) -> None:
         self.game.state_machine.pop()
@@ -97,14 +115,15 @@ class DialogueState(State):
                     if self.box.choices:
                         # Follow choice
                         choice = self.box.choices[self.box.selected_choice]
-                        if "next" in choice:
-                            self._load_node(choice["next"])
+                        next_node = choice.get("next")
+                        if next_node and next_node != "end":
+                            self._load_node(next_node)
                         else:
                             self._close()
                     else:
                         # Follow next node or close
                         next_node = self.current_node_data.get("next")
-                        if next_node:
+                        if next_node and next_node != "end":
                             self._load_node(next_node)
                         else:
                             self._close()

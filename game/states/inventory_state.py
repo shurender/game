@@ -86,41 +86,41 @@ class InventoryState(State):
             self.game.audio.play_sound("menu_cancel")
             self.game.state_machine.pop()
 
-        elif key == pygame.K_LEFT:
+        elif key in (pygame.K_LEFT, pygame.K_a):
             self.game.audio.play_sound("menu_move")
             self.tab_index = (self.tab_index - 1) % len(CATEGORIES)
             self.item_cursor = 0
             self._refresh_list()
 
-        elif key == pygame.K_RIGHT:
+        elif key in (pygame.K_RIGHT, pygame.K_d):
             self.game.audio.play_sound("menu_move")
             self.tab_index = (self.tab_index + 1) % len(CATEGORIES)
             self.item_cursor = 0
             self._refresh_list()
 
-        elif key == pygame.K_UP:
+        elif key in (pygame.K_UP, pygame.K_w):
             if self._filtered:
                 self.game.audio.play_sound("menu_move")
                 self.item_cursor = (self.item_cursor - 1) % len(self._filtered)
 
-        elif key == pygame.K_DOWN:
+        elif key in (pygame.K_DOWN, pygame.K_s):
             if self._filtered:
                 self.game.audio.play_sound("menu_move")
                 self.item_cursor = (self.item_cursor + 1) % len(self._filtered)
 
-        elif key in (pygame.K_RETURN, pygame.K_z):
+        elif key in (pygame.K_RETURN, pygame.K_z, pygame.K_SPACE, pygame.K_e):
             if self._filtered:
                 self.game.audio.play_sound("menu_select")
                 self._open_action_menu()
 
     def _handle_action_menu_keys(self, key: int) -> None:
-        if key == pygame.K_UP:
+        if key in (pygame.K_UP, pygame.K_w):
             self._action_menu.move_up()
             self.game.audio.play_sound("menu_move")
-        elif key == pygame.K_DOWN:
+        elif key in (pygame.K_DOWN, pygame.K_s):
             self._action_menu.move_down()
             self.game.audio.play_sound("menu_move")
-        elif key in (pygame.K_RETURN, pygame.K_z):
+        elif key in (pygame.K_RETURN, pygame.K_z, pygame.K_SPACE, pygame.K_e):
             self.game.audio.play_sound("menu_select")
             self._action_menu.select()
         elif key in (pygame.K_ESCAPE, pygame.K_x):
@@ -130,13 +130,13 @@ class InventoryState(State):
 
     def _handle_target_keys(self, key: int) -> None:
         party = PartyManager.get_instance().party
-        if key == pygame.K_UP:
+        if key in (pygame.K_UP, pygame.K_w):
             self.game.audio.play_sound("menu_move")
             self._target_cursor = (self._target_cursor - 1) % len(party)
-        elif key == pygame.K_DOWN:
+        elif key in (pygame.K_DOWN, pygame.K_s):
             self.game.audio.play_sound("menu_move")
             self._target_cursor = (self._target_cursor + 1) % len(party)
-        elif key in (pygame.K_RETURN, pygame.K_z):
+        elif key in (pygame.K_RETURN, pygame.K_z, pygame.K_SPACE, pygame.K_e):
             self.game.audio.play_sound("menu_select")
             self._apply_to_target(party[self._target_cursor])
         elif key in (pygame.K_ESCAPE, pygame.K_x):

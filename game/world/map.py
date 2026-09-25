@@ -91,6 +91,8 @@ class TileMap:
                     n_data["sprite"], facing, n_data.get("dialogue_id", ""),
                     n_data["trainer_id"]
                 )
+                if pm.has_flag(f"defeated_{n_data['trainer_id']}"):
+                    npc.has_battled = True
             elif "shop_id" in n_data:
                 npc = ShopNPC(
                     n_data["id"], n_data["name"], n_data["x"], n_data["y"],
@@ -140,7 +142,7 @@ class TileMap:
             return None
             
         import random
-        from game.creatures.creature import Creature
+        from game.creatures.creature_factory import CreatureFactory
         
         # Calculate total weight
         total_weight = sum(entry.get("weight", 10) for entry in self.encounter_table)
@@ -153,6 +155,8 @@ class TileMap:
                 level_min = entry.get("level_min", 2)
                 level_max = entry.get("level_max", level_min)
                 level = random.randint(level_min, level_max)
-                return Creature(entry["creature"], level)
+                cf = CreatureFactory.get_instance()
+                species_id = entry.get("creature") or entry.get("species_id") or entry.get("id")
+                return cf.create_creature(species_id, level)
                 
         return None

@@ -249,6 +249,9 @@ class MainMenuState(State):
 
     def _start_new_game(self) -> None:
         from game.states.world_state import WorldState
+        from game.quests.quest_manager import QuestManager
+        qm = QuestManager.get_instance()
+        qm.start_quest("main_01")
         new_state = WorldState(self.game)
         self.game.state_machine.replace(new_state)
 

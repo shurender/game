@@ -22,7 +22,10 @@ class WorldState(State):
         super().__init__(game)
         self.world = World(game)
         self.player = Player(4, 6)  # Default start position
-        self.camera = Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
+        self.view_width = SCREEN_WIDTH // 2   # 480 px logical viewport
+        self.view_height = SCREEN_HEIGHT // 2 # 320 px logical viewport
+        self.camera = Camera(self.view_width, self.view_height)
+        self._world_surf = pygame.Surface((self.view_width, self.view_height))
         self.sprites = SpriteGenerator()
         self.interaction = InteractionManager(game)
         self._paused: bool = False  # True while a sub-state is above us
@@ -173,12 +176,15 @@ class WorldState(State):
                     wild = self.world.current_map.generate_wild_encounter()
                     if wild:
                         from game.states.battle_state import BattleState
-                        from game.player.party import Party
-                        party = Party.get_instance()
+                        from game.player.party import PartyManager
+                        party = PartyManager.get_instance()
                         # Only start battle if party is not empty and has conscious creatures
-                        if not party.is_empty() and any(c.current_hp > 0 for c in party.creatures):
+                        if not party.is_empty() and party.has_usable_creatures():
                             # Play transition sound or stop music here if needed
-                            self.game.state_machine.push(BattleState(self.game, wild_creature=wild))
+                            self.game.state_machine.push(
+                                BattleState(self.game, wild_creature=wild),
+                                {"enemy_creature": wild, "is_trainer": False}
+                            )
                             return
                 
             # Check trainer line of sight
@@ -230,18 +236,18 @@ class WorldState(State):
 
     def render(self, surface: pygame.Surface) -> None:
         self.game.renderer.clear((0, 0, 0))
-        
+        self._world_surf.fill((0, 0, 0))
 
         if not self.world.current_map:
             return
 
         map_data = self.world.current_map
         
-        # Determine visible tile range
+        # Determine visible tile range based on logical viewport
         start_col = max(0, int(self.camera.x) // TILE_SIZE)
-        end_col = min(map_data.width, int(self.camera.x + SCREEN_WIDTH) // TILE_SIZE + 2)
+        end_col = min(map_data.width, int(self.camera.x + self.camera.width) // TILE_SIZE + 2)
         start_row = max(0, int(self.camera.y) // TILE_SIZE)
-        end_row = min(map_data.height, int(self.camera.y + SCREEN_HEIGHT) // TILE_SIZE + 2)
+        end_row = min(map_data.height, int(self.camera.y + self.camera.height) // TILE_SIZE + 2)
         
         # Draw ground layer
         for y in range(start_row, end_row):
@@ -252,13 +258,13 @@ class WorldState(State):
                     tile_surf = self.sprites.get_tile_surface(tile_info, x, y)
                     
                     screen_x, screen_y = self.camera.apply(x * TILE_SIZE, y * TILE_SIZE)
-                    surface.blit(tile_surf, (screen_x, screen_y))
+                    self._world_surf.blit(tile_surf, (screen_x, screen_y))
         
         # Draw NPCs
         for npc in map_data.npcs:
-            npc_surf = self.sprites.get_player_sprite(npc.facing, False, 0.0) # Using player sprite generator as placeholder
+            npc_surf = self.sprites.get_npc_sprite(npc.facing, getattr(npc, "sprite_name", ""))
             screen_x, screen_y = self.camera.apply(npc.x * TILE_SIZE, npc.y * TILE_SIZE)
-            surface.blit(npc_surf, (screen_x, screen_y))
+            self._world_surf.blit(npc_surf, (screen_x, screen_y - (npc_surf.get_height() - TILE_SIZE)))
         
         # Draw player
         player_surf = self.sprites.get_player_sprite(
@@ -267,4 +273,7 @@ class WorldState(State):
             self.player.anim_timer
         )
         px, py = self.camera.apply(self.player.pixel_x, self.player.pixel_y)
-        surface.blit(player_surf, (px, py))
+        self._world_surf.blit(player_surf, (px, py - (player_surf.get_height() - TILE_SIZE)))
+
+        # Scale logical 480x320 view 2x to fill full 960x640 screen
+        pygame.transform.scale(self._world_surf, (SCREEN_WIDTH, SCREEN_HEIGHT), surface)

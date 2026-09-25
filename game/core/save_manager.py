@@ -40,9 +40,10 @@ class SaveManager:
             logger.error("Cannot save: No active world state found.")
             return False
             
+        player_name = getattr(world_state.player, "name", "Player") if world_state.player else "Player"
         data: SaveData = {
             "version": self.CURRENT_VERSION,
-            "player_name": "Player",
+            "player_name": player_name,
             "position": {
                 "x": world_state.player.x,
                 "y": world_state.player.y,
@@ -96,6 +97,8 @@ class SaveManager:
             pos = data.get("position", {})
             from game.states.world_state import WorldState
             new_world = WorldState(self.game)
+            if hasattr(new_world.player, "name"):
+                new_world.player.name = data.get("player_name", "Player")
             self.game.state_machine.clear()
             self.game.state_machine.push(new_world, {
                 "map_id": pos.get("map_id", "test_town"),

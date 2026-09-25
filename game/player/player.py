@@ -21,6 +21,7 @@ class Player:
         # Grid coordinates
         self.x = x
         self.y = y
+        self.name = "Player"
         
         # Pixel coordinates (for rendering smooth movement)
         self.pixel_x = float(x * TILE_SIZE)
@@ -28,7 +29,7 @@ class Player:
         
         self.facing = Direction.DOWN
         self.is_moving = False
-        self.move_speed = 6.0  # Tiles per second
+        self.move_speed = 4.0  # Tiles per second (natural walking/running pace)
 
         # Animation state
         self.anim_timer = 0.0
@@ -55,7 +56,7 @@ class Player:
         target_pixel_y = float(self.y * TILE_SIZE)
 
         if self.is_moving:
-            self.anim_timer += dt * self.move_speed * 4
+            self.anim_timer += dt * 8.0
             
             # Move towards target
             dx = target_pixel_x - self.pixel_x
@@ -73,10 +74,10 @@ class Player:
                 self.pixel_x += (dx / dist) * move_amt
                 self.pixel_y += (dy / dist) * move_amt
         else:
-            # Ensure snapped
+            # Ensure snapped and advance idle breathing animation
             self.pixel_x = target_pixel_x
             self.pixel_y = target_pixel_y
-            self.anim_timer = 0.0
+            self.anim_timer += dt * 6.0
 
     def get_facing_offset(self) -> tuple[int, int]:
         """Return the grid offset of the tile the player is facing."""

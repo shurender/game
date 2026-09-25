@@ -211,8 +211,9 @@ class PauseMenuState(State):
             self._begin_close(_go_main)
 
         elif act == "pokedex":
-            # Placeholder — no Pokédex state yet
-            pass
+            self._save_msg = "Pokédex is not yet available!"
+            self._save_msg_timer = 2.0
+            self._page = "save_result"
 
     # ------------------------------------------------------------------ #
     #  Slide animation helpers                                             #

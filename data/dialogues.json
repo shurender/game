@@ -47,6 +47,10 @@
             "type": "give_item",
             "item": "parcel",
             "qty": 1
+          },
+          {
+            "type": "start_quest",
+            "quest": "main_02"
           }
         ],
         "next": "end"
@@ -66,6 +70,17 @@
       "mayor_thanks": {
         "speaker": "Mayor",
         "text": "Thank you! But we have a bigger problem... Rogues have taken over Route 2!",
+        "actions": [
+          {
+            "type": "remove_item",
+            "item": "parcel",
+            "qty": 1
+          },
+          {
+            "type": "start_quest",
+            "quest": "main_03"
+          }
+        ],
         "next": "end"
       }
     }

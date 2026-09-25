@@ -15,15 +15,15 @@ class SettingsManager:
         "bgm_volume": 0.5,
         "sfx_volume": 0.7,
         "fullscreen": False,
-        "resolution_idx": 1, # e.g. 0: 960x640, 1: 1280x720, 2: 1920x1080
+        "resolution_idx": 0, # 0: 960x640 (Normal 1x)
         "text_speed": 1.0, # 1.0 is normal, 2.0 is fast, etc.
         "battle_animations": True
     }
     
     RESOLUTIONS = [
         (960, 640),
-        (1280, 720),
-        (1920, 1080)
+        (1200, 800),
+        (1440, 960)
     ]
 
     def __init__(self, game):
@@ -90,15 +90,28 @@ class SettingsManager:
             
         target_res = self.RESOLUTIONS[res_idx]
         
+        # Check desktop size to avoid creating a window bigger than the screen
+        try:
+            desktop_sizes = pygame.display.get_desktop_sizes()
+            if desktop_sizes:
+                max_w, max_h = desktop_sizes[0]
+                if target_res[0] >= max_w or target_res[1] >= max_h:
+                    target_res = (SCREEN_WIDTH, SCREEN_HEIGHT)
+                    self.settings["resolution_idx"] = 0
+        except Exception:
+            pass
+
         try:
             # We request the target resolution, but internally it's scaled from the base (960x640)
             self.game.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), flags)
-            if not self.settings["fullscreen"]:
-                # To actually resize the window to the target res in windowed SCALED mode, 
-                # pygame doesn't easily let you specify the window size differently from the surface size.
-                # A common hack for pygame 2 SCALED is to set the logical size.
-                # However, set_mode with SCALED will pick a window size.
-                pass
+            if hasattr(self.game, 'renderer') and self.game.renderer:
+                self.game.renderer.surface = self.game.screen
+            if not self.settings["fullscreen"] and target_res != (SCREEN_WIDTH, SCREEN_HEIGHT):
+                try:
+                    w = pygame.Window.from_display_module()
+                    w.size = target_res
+                except Exception:
+                    pass
         except pygame.error as e:
             print(f"Failed to apply display settings: {e}")
             

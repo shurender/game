@@ -2,10 +2,10 @@
   "version": 1,
   "player_name": "Player",
   "position": {
-    "x": 3,
-    "y": 4,
-    "facing": "RIGHT",
-    "map_id": "starting_town"
+    "x": 7,
+    "y": 14,
+    "facing": "DOWN",
+    "map_id": "route_1"
   },
   "party": {
     "party": [],
@@ -19,7 +19,7 @@
     "quests": [
       {
         "id": "main_01",
-        "status": "NOT_STARTED",
+        "status": "IN_PROGRESS",
         "objectives": [
           {
             "id": "obj_1",

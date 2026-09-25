@@ -2,7 +2,7 @@
 import random
 import math
 from dataclasses import dataclass
-from typing import Tuple
+from typing import Tuple, Any
 
 from game.creatures.creature import Creature
 from game.battle.status_effects import StatusEffect
@@ -22,19 +22,20 @@ ULTRA_BALL = CaptureItem("ultra_ball", "Ultra Ball", 2.0)
 MASTER_BALL = CaptureItem("master_ball", "Master Ball", 255.0)
 
 
-def calculate_capture(creature: Creature, item: CaptureItem) -> Tuple[bool, int]:
+def calculate_capture(creature: Creature, item: Any) -> Tuple[bool, int]:
     """Calculate if a capture is successful independent of UI.
     
     Args:
         creature: The target creature to capture.
-        item: The capture item used.
+        item: The capture item used (CaptureItem or inventory Item).
         
     Returns:
         A tuple of (success: bool, shakes: int).
         `shakes` is how many times the ball shakes before failing (0-3). 
         If success is True, `shakes` is 3.
     """
-    if item.item_id == "master_ball":
+    item_id = getattr(item, "item_id", getattr(item, "id", ""))
+    if item_id == "master_ball":
         return True, 3
         
     base_rate = getattr(creature.species, "catch_rate", 100)
@@ -46,19 +47,27 @@ def calculate_capture(creature: Creature, item: CaptureItem) -> Tuple[bool, int]
     
     # 2. Status modifier
     status_mod = 1.0
-    if hasattr(creature, 'status'):
+    if hasattr(creature, 'status') and creature.status:
         if isinstance(creature.status, str):
             status_name = creature.status
         else:
-            status_name = creature.status.name
+            status_name = getattr(creature.status, "name", str(creature.status))
             
         if status_name in ("SLEEP", "FREEZE"):
             status_mod = 2.0
         elif status_name in ("PARALYSIS", "POISON", "BURN"):
             status_mod = 1.5
             
+    # Modifier from CaptureItem (.catch_rate_modifier) or inventory Item (.value)
+    catch_rate_modifier = getattr(item, "catch_rate_modifier", None)
+    if catch_rate_modifier is None:
+        try:
+            catch_rate_modifier = float(getattr(item, "value", 1.0))
+        except (ValueError, TypeError):
+            catch_rate_modifier = 1.0
+
     # Final rate `a`
-    a = (base_rate * hp_mod * status_mod * item.catch_rate_modifier) / 255.0
+    a = (base_rate * hp_mod * status_mod * catch_rate_modifier) / 255.0
     
     if a >= 1.0:
         return True, 3
@@ -80,7 +89,7 @@ def calculate_capture(creature: Creature, item: CaptureItem) -> Tuple[bool, int]
     return False, shakes
 
 
-def execute_capture(creature: Creature, item: CaptureItem) -> Tuple[bool, int, str]:
+def execute_capture(creature: Creature, item: Any) -> Tuple[bool, int, str]:
     """Calculate capture and optionally add to party/storage.
     
     Returns:

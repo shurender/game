@@ -40,13 +40,13 @@ class PartyState(State):
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.KEYDOWN:
             if self.action_menu:
-                if event.key == pygame.K_UP:
+                if event.key in (pygame.K_UP, pygame.K_w):
                     self.action_menu.move_up()
                     self.game.audio.play_sound("menu_move")
-                elif event.key == pygame.K_DOWN:
+                elif event.key in (pygame.K_DOWN, pygame.K_s):
                     self.action_menu.move_down()
                     self.game.audio.play_sound("menu_move")
-                elif event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z):
+                elif event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z, pygame.K_e):
                     self.game.audio.play_sound("menu_select")
                     self.action_menu.select()
                 elif event.key in (pygame.K_ESCAPE, pygame.K_x):
@@ -60,13 +60,13 @@ class PartyState(State):
                         self.game.state_machine.pop()
                     return
                     
-                if event.key == pygame.K_UP:
+                if event.key in (pygame.K_UP, pygame.K_w):
                     self.cursor_index = (self.cursor_index - 1) % party_len
                     self.game.audio.play_sound("menu_move")
-                elif event.key == pygame.K_DOWN:
+                elif event.key in (pygame.K_DOWN, pygame.K_s):
                     self.cursor_index = (self.cursor_index + 1) % party_len
                     self.game.audio.play_sound("menu_move")
-                elif event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z):
+                elif event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z, pygame.K_e):
                     self.game.audio.play_sound("menu_select")
                     self._on_creature_click()
                 elif event.key in (pygame.K_ESCAPE, pygame.K_x):
@@ -127,7 +127,7 @@ class PartyState(State):
     def render(self, surface: pygame.Surface) -> None:
         surface.fill(COLORS["bg_medium"])
         
-        render_text(surface, "Pokémon Party", self.font, 40, 30, color=COLORS["accent"])
+        render_text(surface, "Creature Party", self.font, 40, 30, color=COLORS["accent"])
         
         y_offset = 80
         for i, creature in enumerate(self.party_mgr.party):

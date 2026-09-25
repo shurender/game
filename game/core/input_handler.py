@@ -66,7 +66,7 @@ class InputHandler:
         self._just_released.clear()
 
     def handle_event(self, event: pygame.event.Event) -> None:
-        """Process a single Pygame key event."""
+        """Process a single Pygame key or mouse event."""
         if event.type == pygame.KEYDOWN:
             action = self._bindings.get(event.key)
             if action and action not in self._pressed:
@@ -77,6 +77,14 @@ class InputHandler:
             if action and action in self._pressed:
                 self._pressed.discard(action)
                 self._just_released.add(action)
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if Action.CONFIRM not in self._pressed:
+                self._pressed.add(Action.CONFIRM)
+                self._just_pressed.add(Action.CONFIRM)
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            if Action.CONFIRM in self._pressed:
+                self._pressed.discard(Action.CONFIRM)
+                self._just_released.add(Action.CONFIRM)
 
     def is_pressed(self, action: Action) -> bool:
         """Return True if the action key is currently held down."""

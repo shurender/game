@@ -58,7 +58,15 @@ class ShopState(State):
         shop_id = params.get("shop_id", "")
 
         factory = ShopFactory.get_instance()
-        self.shop = factory.get(shop_id)
+        try:
+            self.shop = factory.get(shop_id)
+        except ValueError:
+            all_shops = factory.all()
+            self.shop = all_shops[0] if all_shops else None
+            
+        if not self.shop:
+            self.game.state_machine.pop()
+            return
 
         wallet = Wallet.get_instance()
         inv = Inventory.get_instance()
@@ -85,7 +93,7 @@ class ShopState(State):
         key = event.key
 
         if self.phase == "GREETING":
-            if key in (pygame.K_RETURN, pygame.K_z, pygame.K_SPACE):
+            if key in (pygame.K_RETURN, pygame.K_z, pygame.K_SPACE, pygame.K_e):
                 if self._typewriter and not self._typewriter.is_complete:
                     self._typewriter.skip()
                 else:
@@ -93,7 +101,7 @@ class ShopState(State):
             return
 
         if self.phase == "FAREWELL":
-            if key in (pygame.K_RETURN, pygame.K_z, pygame.K_SPACE):
+            if key in (pygame.K_RETURN, pygame.K_z, pygame.K_SPACE, pygame.K_e):
                 if self._typewriter and not self._typewriter.is_complete:
                     self._typewriter.skip()
                 else:
@@ -104,19 +112,19 @@ class ShopState(State):
         rows = self._buy_list if self.tab == "BUY" else self._sell_list
         n = len(rows)
 
-        if key == pygame.K_LEFT:
+        if key in (pygame.K_LEFT, pygame.K_a):
             self._switch_tab("BUY")
-        elif key == pygame.K_RIGHT:
+        elif key in (pygame.K_RIGHT, pygame.K_d):
             self._switch_tab("SELL")
-        elif key == pygame.K_UP:
+        elif key in (pygame.K_UP, pygame.K_w):
             if n:
                 self.cursor = (self.cursor - 1) % n
                 self.game.audio.play_sound("menu_move")
-        elif key == pygame.K_DOWN:
+        elif key in (pygame.K_DOWN, pygame.K_s):
             if n:
                 self.cursor = (self.cursor + 1) % n
                 self.game.audio.play_sound("menu_move")
-        elif key in (pygame.K_RETURN, pygame.K_z):
+        elif key in (pygame.K_RETURN, pygame.K_z, pygame.K_SPACE, pygame.K_e):
             self._confirm_selection()
         elif key in (pygame.K_ESCAPE, pygame.K_x):
             self._begin_farewell()

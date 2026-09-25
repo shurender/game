@@ -47,19 +47,19 @@ class QuestLogState(State):
         rows = self._active_list if self.tab == "ACTIVE" else self._completed_list
         n = len(rows)
         
-        if key == pygame.K_LEFT:
+        if key in (pygame.K_LEFT, pygame.K_a):
             self._switch_tab("ACTIVE")
-        elif key == pygame.K_RIGHT:
+        elif key in (pygame.K_RIGHT, pygame.K_d):
             self._switch_tab("COMPLETED")
-        elif key == pygame.K_UP:
+        elif key in (pygame.K_UP, pygame.K_w):
             if n > 0:
                 self.cursor = (self.cursor - 1) % n
                 self.game.audio.play_sound("menu_move")
-        elif key == pygame.K_DOWN:
+        elif key in (pygame.K_DOWN, pygame.K_s):
             if n > 0:
                 self.cursor = (self.cursor + 1) % n
                 self.game.audio.play_sound("menu_move")
-        elif key in (pygame.K_ESCAPE, pygame.K_x):
+        elif key in (pygame.K_ESCAPE, pygame.K_x, pygame.K_RETURN, pygame.K_SPACE, pygame.K_z, pygame.K_e):
             self.game.state_machine.pop()
             
     def _switch_tab(self, tab: str) -> None:

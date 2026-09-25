@@ -42,12 +42,22 @@ class InteractionManager:
                         })
                         self.game.state_machine.push(battle_state)
                     
-                dialogue_id = target.trainer_data.get("dialogue_start", target.get_current_dialogue())
-                self.game.state_machine.push(DialogueState(self.game, dialogue_id, on_complete=start_battle))
+                intro_text = target.trainer_data.get("dialogue_intro") or target.trainer_data.get("dialogue_start")
+                dialogue_id = target.get_current_dialogue()
+                if intro_text:
+                    self.game.state_machine.push(DialogueState(self.game, dynamic_text=intro_text, speaker=target.name, on_complete=start_battle))
+                elif dialogue_id:
+                    self.game.state_machine.push(DialogueState(self.game, dialogue_id, on_complete=start_battle))
+                else:
+                    start_battle()
             else:
-                dialogue_id = target.trainer_data.get("dialogue_defeat", target.get_current_dialogue())
+                defeat_text = target.trainer_data.get("dialogue_defeat")
+                dialogue_id = target.get_current_dialogue()
                 from game.states.dialogue_state import DialogueState
-                self.game.state_machine.push(DialogueState(self.game, dialogue_id))
+                if defeat_text:
+                    self.game.state_machine.push(DialogueState(self.game, dynamic_text=defeat_text, speaker=target.name))
+                elif dialogue_id:
+                    self.game.state_machine.push(DialogueState(self.game, dialogue_id))
         elif isinstance(target, ShopNPC):
             logger.info(f"Interacted with ShopNPC {target.name}. Shop ID: {target.shop_id}")
             from game.states.shop_state import ShopState

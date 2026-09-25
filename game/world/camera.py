@@ -30,9 +30,18 @@ class Camera:
         return world_x - self.x, world_y - self.y
 
     def clamp_to_map(self, map_width: int, map_height: int) -> None:
-        """Clamp the camera so it doesn't show beyond map boundaries."""
-        self.x = max(0, min(self.x, map_width - self.width))
-        self.y = max(0, min(self.y, map_height - self.height))
+        """Clamp the camera so it doesn't show beyond map boundaries.
+        If the map is smaller than the camera viewport, center it.
+        """
+        if map_width <= self.width:
+            self.x = (map_width - self.width) / 2.0
+        else:
+            self.x = max(0.0, min(self.x, float(map_width - self.width)))
+
+        if map_height <= self.height:
+            self.y = (map_height - self.height) / 2.0
+        else:
+            self.y = max(0.0, min(self.y, float(map_height - self.height)))
 
     def center_on(self, x: float, y: float) -> None:
         """Immediately center the camera on a world position."""

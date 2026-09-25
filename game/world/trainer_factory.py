@@ -27,6 +27,9 @@ class TrainerFactory:
         cf = CreatureFactory.get_instance()
         party = []
         for entry in data.get("party", []):
-            c = cf.create_creature(entry["species_id"], entry["level"])
-            party.append(c)
+            species_id = entry.get("id") or entry.get("species_id") or entry.get("creature")
+            level = entry.get("level", 5)
+            if species_id:
+                c = cf.create_creature(species_id, level)
+                party.append(c)
         return party

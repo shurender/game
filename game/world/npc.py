@@ -9,6 +9,7 @@ class NPC:
     def __init__(self, npc_id: str, name: str, x: int, y: int, sprite_name: str, 
                  facing: Direction, dialogue_id: str):
         self.npc_id = npc_id
+        self.id = npc_id
         self.name = name
         self.x = x
         self.y = y
