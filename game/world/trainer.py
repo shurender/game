@@ -17,5 +17,22 @@ class Trainer(NPC):
         tf = TrainerFactory.get_instance()
         self.trainer_data = tf.get_trainer_data(trainer_id) or {}
         
-        self.has_battled = False
+        self._has_battled = False
+        from game.world.progress_manager import WorldProgressManager
+        if WorldProgressManager.get_instance().has_flag(f"defeated_{trainer_id}"):
+            self._has_battled = True
         self.sight_range = self.trainer_data.get("sight_range", 4)
+
+    @property
+    def has_battled(self) -> bool:
+        if self._has_battled:
+            return True
+        from game.world.progress_manager import WorldProgressManager
+        return WorldProgressManager.get_instance().has_flag(f"defeated_{self.trainer_id}")
+
+    @has_battled.setter
+    def has_battled(self, value: bool) -> None:
+        self._has_battled = value
+        if value:
+            from game.world.progress_manager import WorldProgressManager
+            WorldProgressManager.get_instance().set_flag(f"defeated_{self.trainer_id}", True)

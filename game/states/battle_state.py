@@ -157,11 +157,11 @@ class BattleState(State):
         self.player_sprite = CreatureSprite(self.battle.player_creature, 100, SCREEN_HEIGHT - 300, True, self.game.assets)
         self.enemy_sprite = CreatureSprite(self.battle.enemy_creature, SCREEN_WIDTH - 250, 100, False, self.game.assets)
         
-        self.is_trainer = params.get("is_trainer", False)
-        self.trainer_id = params.get("trainer_id")
-        self.trainer_party = params.get("trainer_party", [])
-        self.trainer_npc = params.get("trainer_npc")
-        self.enemy_party_idx = 0
+        self.is_trainer = params.get("is_trainer", getattr(self, "is_trainer", False))
+        self.trainer_id = params.get("trainer_id", getattr(self, "trainer_id", None))
+        self.trainer_party = params.get("trainer_party", getattr(self, "trainer_party", []))
+        self.trainer_npc = params.get("trainer_npc", getattr(self, "trainer_npc", None))
+        self.enemy_party_idx = getattr(self, "enemy_party_idx", 0)
         
         ai_type = "BASIC"
         if self.is_trainer and self.trainer_npc and hasattr(self.trainer_npc, "trainer_data"):
@@ -205,36 +205,42 @@ class BattleState(State):
         )
         
     def handle_event(self, event: pygame.event.Event) -> None:
-        if event.type == pygame.KEYDOWN:
+        if event.type in (pygame.KEYDOWN, pygame.MOUSEBUTTONDOWN):
+            is_confirm = False
+            if event.type == pygame.KEYDOWN and event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z, pygame.K_e):
+                is_confirm = True
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                is_confirm = True
+
             if self.phase in ("INTRO", "ANIMATE_EVENTS", "BATTLE_END", "ANIMATE_CAPTURE_END", "ANIMATE_CAPTURE_FAIL"):
-                if event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z, pygame.K_e):
+                if is_confirm:
                     if not self.dialogue_box.is_finished:
                         self.dialogue_box.skip_typing()
                     else:
                         self._advance_phase()
                         
             elif self.phase == "PLAYER_TURN":
-                if event.key in (pygame.K_UP, pygame.K_w):
+                if event.type == pygame.KEYDOWN and event.key in (pygame.K_UP, pygame.K_w):
                     self.main_menu.move_up()
                     self.game.audio.play_sound("menu_move")
-                elif event.key in (pygame.K_DOWN, pygame.K_s):
+                elif event.type == pygame.KEYDOWN and event.key in (pygame.K_DOWN, pygame.K_s):
                     self.main_menu.move_down()
                     self.game.audio.play_sound("menu_move")
-                elif event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z, pygame.K_e):
+                elif is_confirm:
                     self.game.audio.play_sound("menu_select")
                     self.main_menu.select()
                     
             elif self.phase == "MOVE_SELECT":
-                if event.key in (pygame.K_UP, pygame.K_w):
+                if event.type == pygame.KEYDOWN and event.key in (pygame.K_UP, pygame.K_w):
                     self.move_menu.move_up()
                     self.game.audio.play_sound("menu_move")
-                elif event.key in (pygame.K_DOWN, pygame.K_s):
+                elif event.type == pygame.KEYDOWN and event.key in (pygame.K_DOWN, pygame.K_s):
                     self.move_menu.move_down()
                     self.game.audio.play_sound("menu_move")
-                elif event.key in (pygame.K_RETURN, pygame.K_SPACE, pygame.K_z, pygame.K_e):
+                elif is_confirm:
                     self.game.audio.play_sound("menu_select")
                     self.move_menu.select()
-                elif event.key in (pygame.K_ESCAPE, pygame.K_x):
+                elif (event.type == pygame.KEYDOWN and event.key in (pygame.K_ESCAPE, pygame.K_x)) or (event.type == pygame.MOUSEBUTTONDOWN and event.button == 3):
                     self.game.audio.play_sound("menu_cancel")
                     self.phase = "PLAYER_TURN"
 
@@ -441,16 +447,39 @@ class BattleState(State):
                     party_mgr = PartyManager.get_instance()
                     if party_mgr.has_usable_creatures():
                         party_state = PartyState(self.game)
-                        party_state.enter({"mode": "BATTLE_SWITCH", "on_select": self._on_forced_switch})
-                        self.game.state_machine.push(party_state)
+                        self.game.state_machine.push(party_state, {"mode": "BATTLE_SWITCH", "on_select": self._on_forced_switch})
                         return
                     else:
                         self.battle.is_over = True
                         self.battle.winner = "ENEMY"
                         
+                # Check if trainer has more creatures
+                if self.battle.winner == "PLAYER" and self.is_trainer:
+                    next_creature = None
+                    for i in range(self.enemy_party_idx + 1, len(self.trainer_party)):
+                        if not self.trainer_party[i].is_fainted:
+                            next_creature = self.trainer_party[i]
+                            self.enemy_party_idx = i
+                            break
+                    
+                    if next_creature:
+                        self.battle.is_over = False
+                        self.battle.winner = None
+                        self.battle.enemy_creature = next_creature
+                        self.enemy_sprite = CreatureSprite(next_creature, SCREEN_WIDTH - 250, 100, False, self.game.assets)
+                        self.phase = "ANIMATE_EVENTS"
+                        self.dialogue_box.start_text("", f"Trainer {self.trainer_npc.name} sent out {next_creature.name}!")
+                        return
+
                 self.phase = "BATTLE_END"
                 if self.battle.winner == "PLAYER":
-                    self.dialogue_box.start_text("", "You won the battle!")
+                    if self.is_trainer and self.trainer_npc:
+                        self.trainer_npc.has_battled = True
+                        from game.world.progress_manager import WorldProgressManager
+                        WorldProgressManager.get_instance().set_flag(f"defeated_{self.trainer_id}", True)
+                        self.dialogue_box.start_text("", f"You defeated Trainer {self.trainer_npc.name}!")
+                    else:
+                        self.dialogue_box.start_text("", "You won the battle!")
                 elif self.battle.winner == "ENEMY":
                     self.dialogue_box.start_text("", "You blacked out!")
                 else:
@@ -483,7 +512,8 @@ class BattleState(State):
                     if self.battle.player_creature.is_fainted:
                         party_mgr = PartyManager.get_instance()
                         if party_mgr.has_usable_creatures():
-                            self.game.state_machine.push(PartyState(self.game), {"mode": "BATTLE_SWITCH", "on_select": self._on_forced_switch})
+                            party_state = PartyState(self.game)
+                            self.game.state_machine.push(party_state, {"mode": "BATTLE_SWITCH", "on_select": self._on_forced_switch})
                             return
                         else:
                             self.battle.is_over = True
@@ -512,7 +542,10 @@ class BattleState(State):
 
                     self.phase = "BATTLE_END"
                     if self.battle.winner == "PLAYER":
-                        if self.is_trainer:
+                        if self.is_trainer and self.trainer_npc:
+                            self.trainer_npc.has_battled = True
+                            from game.world.progress_manager import WorldProgressManager
+                            WorldProgressManager.get_instance().set_flag(f"defeated_{self.trainer_id}", True)
                             self.dialogue_box.start_text("", f"You defeated Trainer {self.trainer_npc.name}!")
                         else:
                             self.dialogue_box.start_text("", "You won the battle!")
@@ -525,22 +558,7 @@ class BattleState(State):
                     self.dialogue_box.start_text("", f"What will {self.battle.player_creature.name} do?")
                     self.dialogue_box.skip_typing()
         elif self.phase == "BATTLE_END":
-            if self.battle.winner == "ENEMY":
-                party_mgr = PartyManager.get_instance()
-                for c in party_mgr.party:
-                    c.current_hp = c.stats.hp
-                    c.status = None
-                from game.states.world_state import WorldState
-                self.game.state_machine.clear()
-                self.game.state_machine.push(WorldState(self.game), {
-                    "map_id": "player_house",
-                    "x": 4,
-                    "y": 6
-                })
-                return
-            self.game.state_machine.pop()
-            
-            # Fire Quest Events
+            # Fire Quest Events & Trainer rewards BEFORE popping state
             from game.quests.quest_manager import QuestManager
             import logging
             logger = logging.getLogger("risu")
@@ -551,7 +569,7 @@ class BattleState(State):
                 for msg in msgs:
                     logger.info(msg)
                     
-                if self.is_trainer:
+                if self.is_trainer and self.trainer_npc:
                     self.trainer_npc.has_battled = True
                     msgs = qm.on_event("defeat_trainer", {"trainer_id": self.trainer_id})
                     for msg in msgs:
@@ -579,6 +597,22 @@ class BattleState(State):
                 msgs = qm.on_event("capture_creature", {"species_id": self.battle.enemy_creature.species.species_id})
                 for msg in msgs:
                     logger.info(msg)
+
+            if self.battle.winner == "ENEMY":
+                party_mgr = PartyManager.get_instance()
+                for c in party_mgr.party:
+                    c.current_hp = c.stats.hp
+                    c.status = None
+                from game.states.world_state import WorldState
+                self.game.state_machine.clear()
+                self.game.state_machine.push(WorldState(self.game), {
+                    "map_id": "player_house",
+                    "x": 4,
+                    "y": 6
+                })
+                return
+
+            self.game.state_machine.pop()
 
             if self.turn_result and self.turn_result.xp_result and self.turn_result.xp_result.pending_evolution:
                 from game.states.evolution_state import EvolutionState

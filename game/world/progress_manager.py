@@ -27,6 +27,10 @@ class WorldProgressManager:
         if key in self._flags:
             del self._flags[key]
             
+    def clear(self) -> None:
+        """Clear all progression flags."""
+        self._flags.clear()
+            
     def check_conditions(self, conditions: dict) -> bool:
         """
         Check if all conditions in the dictionary are met.

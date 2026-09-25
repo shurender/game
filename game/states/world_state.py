@@ -77,6 +77,7 @@ class WorldState(State):
     def resume(self) -> None:
         """Resume world updates when the sub-state above us is popped."""
         self._paused = False
+        self.game.input.begin_frame()
         # Play world music again in case battle music was playing
         if self.world.current_map:
             self.game.audio.music.play_world_music(self.world.current_map.map_id)

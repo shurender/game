@@ -32,15 +32,14 @@ class InteractionManager:
                     
                     if enemy_party:
                         battle_state = BattleState(self.game)
-                        # We pass the trainer info into battle state
-                        battle_state.enter({
+                        battle_params = {
                             "enemy_creature": enemy_party[0],
                             "is_trainer": True,
                             "trainer_id": target.trainer_id,
                             "trainer_party": enemy_party,
                             "trainer_npc": target
-                        })
-                        self.game.state_machine.push(battle_state)
+                        }
+                        self.game.state_machine.push(battle_state, battle_params)
                     
                 intro_text = target.trainer_data.get("dialogue_intro") or target.trainer_data.get("dialogue_start")
                 dialogue_id = target.get_current_dialogue()
